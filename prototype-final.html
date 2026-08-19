@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>牵强 · 个人博客</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f5f6fa; --card: #fff; --nav-bg: rgba(255,255,255,.82);
+            --t1: #1e1e2e; --t2: #5a5a7a; --t3: #9a9ab0;
+            --border: #e8ecf4; --accent: #5b7cfa; --accent2: #a78bfa;
+            --grd: linear-gradient(135deg, #5b7cfa, #a78bfa);
+            --grd-bg: linear-gradient(135deg, #0c0c24, #1a1040, #0c0c24);
+            --shad-md: 0 4px 24px rgba(0,0,0,.07);
+            --r: 12px; --r-sm: 8px;
+            --nav-h: 64px; --max-w: 1200px;
+            --tag-bg: #eef1ff; --tag-c: #5b7cfa;
+        }
+        [data-theme="dark"] {
+            --bg: #0d0d1a; --card: #16162a; --nav-bg: rgba(13,13,26,.88);
+            --t1: #e2e2f0; --t2: #9898b8; --t3: #5e5e7e;
+            --border: #262642; --tag-bg: #1e1e42; --tag-c: #8b9aff;
+            --shad-md: 0 4px 24px rgba(0,0,0,.4);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background:var(--bg); color:var(--t1); line-height:1.7;
+            transition:background .35s,color .35s; padding-top:var(--nav-h);
+        }
+        a { color:var(--accent); text-decoration:none; }
+        .container { max-width:var(--max-w); margin:0 auto; padding:0 48px; }
+
+        /* ===== 导航 ===== */
+        .navbar { position:fixed; top:0; left:0; right:0; z-index:1000; height:var(--nav-h);
+            background:var(--nav-bg); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+            border-bottom:1px solid var(--border); transition:background .35s,border-color .35s; }
+        .navbar .container { display:flex; align-items:center; justify-content:space-between; height:100%; }
+        .logo { font-size:20px; font-weight:800; background:var(--grd); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:1px; }
+        .nav-menu { display:flex; align-items:center; gap:4px; list-style:none; }
+        .nav-menu a { padding:8px 18px; font-size:14px; font-weight:500; color:var(--t2); border-radius:var(--r-sm); transition:all .2s; }
+        .nav-menu a:hover, .nav-menu a.active { color:var(--accent); background:var(--tag-bg); }
+        .nav-menu a.active { font-weight:600; }
+        .nav-right { display:flex; align-items:center; gap:12px; }
+        .theme-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--card); color:var(--t2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; transition:all .2s; }
+        .theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+        .search-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--card); color:var(--t2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; transition:all .2s; }
+        .search-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+        /* 汉堡菜单按钮 */
+        .hamburger { display:none; width:36px; height:36px; border-radius:var(--r-sm); border:1px solid var(--border); background:var(--card); color:var(--t2); cursor:pointer; align-items:center; justify-content:center; font-size:18px; transition:all .2s; }
+        .hamburger:hover { border-color:var(--accent); color:var(--accent); }
+
+        /* 移动端菜单浮层 */
+        .mobile-nav-overlay { display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.5); }
+        .mobile-nav-overlay.active { display:block; }
+        .mobile-nav-panel {
+            position:fixed; top:0; right:0; bottom:0; width:280px; z-index:2001;
+            background:var(--card); border-left:1px solid var(--border);
+            padding:24px; transform:translateX(100%); transition:transform .25s;
+            display:flex; flex-direction:column;
+        }
+        .mobile-nav-panel.open { transform:translateX(0); }
+        .mobile-nav-panel .mnp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+        .mobile-nav-panel .mnp-header .logo { font-size:18px; }
+        .mobile-nav-panel .mnp-close { width:32px; height:32px; border-radius:50%; border:none; background:var(--bg); color:var(--t2); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+        .mobile-nav-panel .mnp-search { display:flex; align-items:center; background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:0 14px; height:40px; margin-bottom:20px; }
+        .mobile-nav-panel .mnp-search input { border:none; background:transparent; outline:none; font-size:14px; color:var(--t1); flex:1; }
+        .mobile-nav-panel .mnp-search i { color:var(--t3); margin-right:8px; }
+        .mobile-nav-panel .mnp-links { list-style:none; display:flex; flex-direction:column; gap:2px; flex:1; }
+        .mobile-nav-panel .mnp-links a { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--r-sm); font-size:15px; font-weight:500; color:var(--t2); text-decoration:none; transition:all .2s; }
+        .mobile-nav-panel .mnp-links a:hover, .mobile-nav-panel .mnp-links a.active { background:var(--tag-bg); color:var(--accent); }
+        .mobile-nav-panel .mnp-links a i { width:20px; text-align:center; font-size:16px; }
+        .mobile-nav-panel .mnp-actions { display:flex; gap:12px; padding-top:20px; border-top:1px solid var(--border); }
+        .mobile-nav-panel .mnp-actions .btn { flex:1; justify-content:center; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 22px; font-size:14px; font-weight:600; border-radius:var(--r-sm); border:none; cursor:pointer; transition:all .25s; white-space:nowrap; }
+        .btn-primary { background:var(--grd); color:#fff; }
+        .btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(91,124,250,.35); }
+        .btn-outline { background:transparent; color:var(--t2); border:1px solid var(--border); }
+        .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+        .btn-sm { padding:6px 16px; font-size:13px; }
+
+        /* ===== Banner ===== */
+        .banner { position:relative; height:380px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--grd-bg); background-image:url('banner-bg.jpg'); background-size:cover; background-position:center 45%; }
+        .banner-overlay { position:absolute; inset:0; background:linear-gradient(to bottom, rgba(8,10,30,.28) 0%, rgba(8,10,30,.52) 100%), radial-gradient(ellipse 80% 60% at 30% 40%, rgba(91,124,250,.20) 0%, transparent 70%), radial-gradient(ellipse 60% 50% at 70% 60%, rgba(167,139,250,.15) 0%, transparent 70%); z-index:1; }
+        .banner-stars { position:absolute; inset:0; z-index:2; overflow:hidden; }
+        .star { position:absolute; border-radius:50%; background:#fff; animation-name:twinkle; animation-iteration-count:infinite; animation-direction:alternate; animation-timing-function:ease-in-out; }
+        @keyframes twinkle { 0%{opacity:.15;transform:scale(.8)} 100%{opacity:.9;transform:scale(1.2)} }
+        .banner-shape { position:absolute; z-index:3; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle, rgba(91,124,250,.12) 0%, transparent 70%); right:-100px; top:-100px; }
+        .banner-shape2 { position:absolute; z-index:3; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, rgba(167,139,250,.10) 0%, transparent 70%); left:-60px; bottom:-60px; }
+        .banner-content { position:relative; z-index:4; text-align:center; max-width:680px; padding:0 24px; }
+        .banner-content h1 { font-size:48px; font-weight:800; color:#fff; letter-spacing:3px; margin-bottom:12px; text-shadow:0 2px 30px rgba(0,0,0,.3); }
+        .banner-content p { font-size:16px; color:rgba(255,255,255,.6); letter-spacing:.5px; }
+        .banner-line { width:50px; height:3px; background:var(--grd); margin:18px auto 0; border-radius:2px; }
+        .typed-sub { font-size:16px; color:rgba(255,255,255,.6); letter-spacing:.5px; min-height:24px; }
+        .typed-cursor { color:var(--accent); animation:blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity:0; } }
+        .scroll-down { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:4; color:rgba(255,255,255,.55); font-size:22px; animation:bounceDown 2s infinite; cursor:pointer; }
+        @keyframes bounceDown { 0%,100%{transform:translate(-50%,0);opacity:.6} 50%{transform:translate(-50%,10px);opacity:1} }
+        .page-title-banner { height:240px; }
+        .page-title-banner .banner-content h1 { font-size:36px; }
+
+
+        /* ===== 首页两栏 ===== */
+        .home-layout { display:flex; gap:48px; padding:32px 0; align-items:flex-start; }
+        .home-main { flex:1; min-width:0; }
+        .section-title { font-size:20px; font-weight:700; margin-bottom:24px; display:flex; align-items:center; gap:10px; }
+        .section-title i { color:var(--accent); }
+        .section-title .count { font-size:14px; font-weight:400; color:var(--t3); }
+
+        .article-list { display:flex; flex-direction:column; gap:16px; }
+        .article-item { background:var(--card); border-radius:var(--r); border:1px solid var(--border); padding:20px 24px; transition:all .3s; cursor:pointer; display:flex; gap:20px; }
+        .article-item:hover { transform:translateY(-2px); box-shadow:var(--shad-md); border-color:transparent; }
+        .article-item .cover { width:240px; height:150px; border-radius:var(--r-sm); flex-shrink:0; overflow:hidden; background:var(--tag-bg); }
+        .article-item .cover img { width:100%; height:100%; object-fit:cover; }
+        .article-item .info { flex:1; display:flex; flex-direction:column; justify-content:center; }
+        .article-item .info h3 { font-size:16px; font-weight:700; margin-bottom:8px; line-height:1.5; }
+        .article-item .info .desc { font-size:13px; color:var(--t2); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:12px; }
+        .article-item .info .meta { font-size:12px; color:var(--t3); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+        .article-item .info .meta .tag { padding:2px 10px; border-radius:8px; background:var(--tag-bg); color:var(--tag-c); font-weight:600; font-size:11px; }
+        .article-item .info .meta i { margin-right:3px; }
+
+        /* ===== 侧边栏 ===== */
+        .home-sidebar { width:340px; flex-shrink:0; display:flex; flex-direction:column; gap:24px; }
+        .sidebar-card { background:var(--card); border-radius:var(--r); border:1px solid var(--border); padding:24px; }
+        .profile-card { text-align:center; }
+        .profile-avatar { width:80px; height:80px; border-radius:50%; margin:0 auto 16px; background:var(--grd); display:flex; align-items:center; justify-content:center; font-size:32px; color:#fff; font-weight:700; }
+        .profile-card h3 { font-size:18px; font-weight:700; margin-bottom:4px; }
+        .profile-card .bio { font-size:13px; color:var(--t2); margin-bottom:16px; line-height:1.6; }
+        .profile-stats { display:flex; justify-content:center; gap:24px; padding:16px 0; border-top:1px solid var(--border); }
+        .profile-stats div { text-align:center; }
+        .profile-stats .n { font-size:18px; font-weight:700; color:var(--accent); }
+        .profile-stats .l { font-size:12px; color:var(--t3); }
+        .sidebar-card h4 { font-size:14px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+        .sidebar-card h4 i { color:var(--accent); }
+        .tags-cloud { display:flex; flex-wrap:wrap; gap:8px; }
+        .tags-cloud .tag { padding:4px 14px; border-radius:14px; font-size:12px; font-weight:500; background:var(--tag-bg); color:var(--tag-c); cursor:pointer; transition:all .2s; }
+        .tags-cloud .tag:hover { background:var(--grd); color:#fff; }
+        /* 侧边栏：最新文章 / 热门排行 */
+        .latest-list { list-style:none; }
+        .latest-list li { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+        .latest-list li:last-child { border-bottom:none; }
+        .latest-list .ll-thumb { width:56px; height:42px; border-radius:6px; overflow:hidden; flex-shrink:0; background:var(--tag-bg); }
+        .latest-list .ll-thumb img { width:100%; height:100%; object-fit:cover; }
+        .latest-list .ll-info { flex:1; min-width:0; }
+        .latest-list .ll-title { font-size:13px; font-weight:500; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .latest-list .ll-date { font-size:11px; color:var(--t3); margin-top:3px; }
+
+        /* ===== 分类页（简洁列表） ===== */
+        .cat-list { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+        .cat-item { display:flex; align-items:center; gap:14px; padding:15px 22px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s; }
+        .cat-item:last-child { border-bottom:none; }
+        .cat-item:hover { background:var(--tag-bg); }
+        .cat-item .ci-name { font-size:15px; font-weight:600; flex:1; }
+        .cat-item .ci-count { font-size:13px; color:var(--t3); }
+        .cat-item .ci-arrow { font-size:13px; color:var(--t3); }
+
+        /* ===== 标签页 ===== */
+        .tags-page-grid { display:flex; flex-wrap:wrap; gap:12px; margin:24px 0 40px; }
+        .tags-page-grid .tag-item {
+            padding:10px 24px; border-radius:20px; font-size:14px; font-weight:500;
+            background:var(--card); border:1px solid var(--border); color:var(--t2);
+            cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:8px;
+        }
+        .tags-page-grid .tag-item:hover { background:var(--grd); color:#fff; border-color:transparent; transform:translateY(-2px); box-shadow:0 4px 14px rgba(91,124,250,.3); }
+        .tags-page-grid .tag-item .count { font-size:12px; opacity:.7; }
+
+        /* ===== 关于页面 ===== */
+        .about-wrapper { max-width:800px; margin:0 auto; padding:40px 0; }
+        .about-card { background:var(--card); border-radius:var(--r); border:1px solid var(--border); overflow:hidden; }
+        .about-header {
+            background:var(--grd-bg); padding:60px 40px 50px; text-align:center; position:relative; overflow:hidden;
+        }
+        .about-header::before {
+            content:''; position:absolute; inset:0;
+            background:radial-gradient(ellipse 80% 60% at 30% 40%, rgba(91,124,250,.20) 0%, transparent 70%);
+        }
+        .about-avatar {
+            width:96px; height:96px; border-radius:50%; margin:0 auto 20px; position:relative; z-index:1;
+            background:var(--grd); display:flex; align-items:center; justify-content:center;
+            font-size:38px; color:#fff; font-weight:700; box-shadow:0 4px 20px rgba(91,124,250,.3);
+        }
+        .about-header h1 { font-size:28px; font-weight:800; color:#fff; position:relative; z-index:1; margin-bottom:6px; }
+        .about-header .tagline { font-size:15px; color:rgba(255,255,255,.65); position:relative; z-index:1; }
+        .about-header .stars-mini { position:absolute; inset:0; z-index:1; overflow:hidden; }
+        .about-body { padding:40px; }
+
+        .about-section { margin-bottom:36px; }
+        .about-section:last-child { margin-bottom:0; }
+        .about-section-title {
+            font-size:17px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:10px;
+            padding-bottom:10px; border-bottom:1px solid var(--border);
+        }
+        .about-section-title i { color:var(--accent); }
+
+        .about-section p { font-size:14px; color:var(--t2); line-height:1.9; }
+        .about-section p + p { margin-top:12px; }
+
+        /* 技术栈 */
+        .skill-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:16px; }
+        .skill-group {}
+        .skill-group .label { font-size:12px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+        .skill-group .items { display:flex; flex-wrap:wrap; gap:8px; }
+        .skill-group .items span {
+            padding:6px 16px; border-radius:8px; font-size:13px; font-weight:500;
+            background:var(--tag-bg); color:var(--tag-c);
+        }
+
+        /* 联系方式 */
+        .contact-list { display:flex; flex-direction:column; gap:12px; }
+        .contact-item {
+            display:flex; align-items:center; gap:14px; padding:12px 16px;
+            border-radius:var(--r-sm); border:1px solid var(--border); transition:all .2s;
+        }
+        .contact-item:hover { border-color:var(--accent); background:var(--tag-bg); }
+        .contact-item .ci-icon {
+            width:40px; height:40px; border-radius:50%; background:var(--tag-bg); color:var(--tag-c);
+            display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+        }
+        .contact-item .ci-body {}
+        .contact-item .ci-body .ci-label { font-size:13px; font-weight:600; }
+        .contact-item .ci-body .ci-value { font-size:13px; color:var(--t2); }
+
+        /* 博客故事 */
+        .story-item { display:flex; gap:16px; padding:16px 0; border-bottom:1px solid var(--border); }
+        .story-item:last-child { border-bottom:none; }
+        .story-item .si-dot {
+            width:10px; height:10px; border-radius:50%; background:var(--accent); margin-top:6px; flex-shrink:0;
+        }
+        .story-item .si-content {}
+        .story-item .si-content .si-time { font-size:12px; color:var(--t3); font-weight:500; }
+        .story-item .si-content .si-text { font-size:14px; color:var(--t2); margin-top:2px; }
+
+        /* ===== 分隔标注 ===== */
+        .demo-label { text-align:center; font-size:13px; color:var(--t3); padding:48px 0 12px; letter-spacing:2px; display:flex; align-items:center; gap:16px; justify-content:center; }
+        .demo-label::before, .demo-label::after { content:''; flex:1; max-width:120px; height:1px; background:var(--border); }
+
+        /* ===== 分页 ===== */
+        .pagination { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:32px; }
+        .page-btn { width:36px; height:36px; border-radius:var(--r-sm); border:1px solid var(--border); background:var(--card); color:var(--t2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all .2s; }
+        .page-btn:hover { border-color:var(--accent); color:var(--accent); }
+        .page-btn.active { background:var(--grd); color:#fff; border-color:transparent; }
+        .page-btn.disabled { opacity:.4; cursor:not-allowed; }
+
+        .footer { border-top:1px solid var(--border); padding:32px 0; text-align:center; font-size:14px; color:var(--t3); margin-top:20px; }
+        .footer .heart { color:#e25555; }
+
+        .badge { position:fixed; bottom:24px; right:24px; z-index:999; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px 20px; box-shadow:var(--shad-md); font-size:13px; color:var(--t2); display:flex; align-items:center; gap:12px; }
+        .badge i { color:var(--accent); font-size:18px; }
+        .badge small { color:var(--t3); display:block; margin-top:2px; }
+
+        /* ===== 登录/注册页 ===== */
+        .auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--grd-bg); position:relative; overflow:hidden; padding:40px 24px; }
+        .auth-page::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 30% 40%, rgba(91,124,250,.15) 0%, transparent 70%); }
+        .auth-card { position:relative; z-index:2; background:rgba(255,255,255,.06); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:40px; width:400px; max-width:100%; }
+        .auth-card h1 { color:#fff; font-size:24px; text-align:center; margin-bottom:4px; }
+        .auth-card .sub { color:rgba(255,255,255,.45); text-align:center; font-size:14px; margin-bottom:32px; }
+        .auth-card .field { margin-bottom:20px; }
+        .auth-card .field label { display:block; color:rgba(255,255,255,.7); font-size:13px; font-weight:500; margin-bottom:6px; }
+        .auth-card .field input { width:100%; padding:12px 16px; border-radius:8px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-size:14px; outline:none; transition:border-color .2s; }
+        .auth-card .field input:focus { border-color:var(--accent); }
+        .auth-card .field input::placeholder { color:rgba(255,255,255,.3); }
+        .auth-btn { width:100%; padding:12px; border:none; border-radius:8px; background:var(--grd); color:#fff; font-size:15px; font-weight:600; cursor:pointer; transition:all .25s; }
+        .auth-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(91,124,250,.4); }
+        .auth-link { text-align:center; margin-top:20px; font-size:13px; color:rgba(255,255,255,.4); }
+        .auth-link a { color:var(--accent); text-decoration:none; }
+
+        /* ===== 文章详情页 ===== */
+        .detail-page { padding:32px 0; }
+        .detail-article { background:var(--card); border-radius:var(--r); border:1px solid var(--border); overflow:hidden; }
+        .detail-article .da-cover { width:100%; height:400px; overflow:hidden; background:var(--tag-bg); }
+        .detail-article .da-cover img { width:100%; height:100%; object-fit:cover; }
+        .detail-article .da-body { padding:40px; }
+        .detail-article .da-header { margin-bottom:32px; }
+        .detail-article .da-header h1 { font-size:28px; font-weight:800; line-height:1.4; margin-bottom:14px; }
+        .detail-article .da-meta { display:flex; align-items:center; gap:16px; font-size:13px; color:var(--t3); flex-wrap:wrap; }
+        .detail-article .da-meta .dm-tag { padding:2px 10px; border-radius:6px; background:var(--tag-bg); color:var(--tag-c); font-weight:600; font-size:11px; }
+        .detail-article .da-meta i { margin-right:4px; }
+        .detail-article .da-content { font-size:15px; line-height:1.9; color:var(--t2); }
+        .detail-article .da-content p { margin-bottom:20px; }
+        .detail-article .da-content h2 { font-size:22px; font-weight:700; color:var(--t1); margin:32px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+        .detail-article .da-content h3 { font-size:18px; font-weight:700; color:var(--t1); margin:24px 0 12px; }
+        .detail-article .da-content pre { background:#1e1e2e; color:#cdd6f4; border-radius:var(--r-sm); padding:20px; overflow-x:auto; font-size:14px; margin:20px 0; }
+        .detail-article .da-content code { font-family:'JetBrains Mono','Fira Code',monospace; }
+        .detail-article .da-content blockquote { border-left:3px solid var(--accent); padding:12px 20px; background:var(--tag-bg); border-radius:0 var(--r-sm) var(--r-sm) 0; margin:20px 0; color:var(--t2); }
+        .detail-article .da-content img { max-width:100%; border-radius:var(--r-sm); margin:20px 0; }
+        .detail-article .da-content ul, .detail-article .da-content ol { padding-left:24px; margin:16px 0; }
+        .detail-article .da-content li { margin-bottom:6px; }
+        .detail-article .da-tags { display:flex; gap:6px; flex-wrap:wrap; margin:32px 0 24px; padding-top:24px; border-top:1px solid var(--border); }
+        .detail-article .da-tags span { padding:4px 14px; border-radius:14px; background:var(--tag-bg); color:var(--tag-c); font-size:12px; font-weight:500; }
+        .da-like { display:flex; align-items:center; gap:16px; padding:20px 0; border-top:1px solid var(--border); }
+        .like-button { display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:24px; border:1px solid var(--border); background:var(--bg); color:var(--t2); cursor:pointer; font-size:14px; font-weight:500; transition:all .25s; }
+        .like-button:hover { border-color:#f87171; color:#f87171; }
+        .like-button.liked { background:#fef2f2; border-color:#f87171; color:#f87171; }
+        .like-button i { font-size:18px; }
+        .da-comments { padding:32px 40px 40px; border-top:1px solid var(--border); }
+        .da-comments h3 { font-size:17px; font-weight:700; margin-bottom:24px; display:flex; align-items:center; gap:8px; }
+        .da-comments h3 i { color:var(--accent); }
+        .comment-input { display:flex; gap:12px; margin-bottom:28px; flex-wrap:wrap; }
+        .comment-input input, .comment-input textarea { padding:10px 16px; border:1px solid var(--border); border-radius:var(--r-sm); background:var(--bg); color:var(--t1); font-size:14px; font-family:inherit; transition:border-color .2s; outline:none; }
+        .comment-input input:focus, .comment-input textarea:focus { border-color:var(--accent); }
+        .comment-input input { flex:0 0 150px; }
+        .comment-input textarea { flex:1; min-height:72px; resize:vertical; }
+        .dc-item { display:flex; gap:14px; padding:18px 0; border-bottom:1px solid var(--border); }
+        .dc-item:last-child { border-bottom:none; }
+        .dc-avatar { width:38px; height:38px; border-radius:50%; background:var(--grd); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; }
+        .dc-body { flex:1; }
+        .dc-body .dc-name { font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+        .dc-body .dc-name .dc-time { font-weight:400; color:var(--t3); font-size:12px; }
+        .dc-body .dc-name .dc-author { background:var(--accent); color:#fff; font-size:10px; padding:1px 8px; border-radius:4px; font-weight:600; }
+        .dc-body .dc-text { font-size:14px; color:var(--t2); margin-top:4px; line-height:1.7; }
+        .dc-body .dc-reply { font-size:12px; color:var(--accent); cursor:pointer; margin-top:6px; display:inline-block; }
+        .dc-children { margin-left:52px; padding-left:16px; border-left:2px solid var(--border); }
+
+        /* ===== 搜索浮层 ===== */
+        .search-modal-overlay { display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,.5); align-items:flex-start; justify-content:center; padding:120px 24px 24px; }
+        .search-modal-overlay.active { display:flex; }
+        .search-modal { width:100%; max-width:560px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:0 8px 40px rgba(0,0,0,.2); overflow:hidden; }
+        .search-modal .sm-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); }
+        .search-modal .sm-header h3 { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
+        .search-modal .sm-close { width:30px; height:30px; border:none; border-radius:50%; background:var(--bg); color:var(--t2); cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+        .search-modal .sm-close:hover { color:var(--accent); }
+        .search-modal .sm-input { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); }
+        .search-modal .sm-input i { color:var(--t3); }
+        .search-modal .sm-input input { flex:1; border:none; outline:none; background:transparent; font-size:15px; color:var(--t1); }
+        .search-modal .sm-input input::placeholder { color:var(--t3); }
+        .search-modal .sm-body { max-height:360px; overflow-y:auto; padding:4px 20px; }
+        .search-modal .sm-empty { text-align:center; color:var(--t3); padding:40px 0; font-size:14px; }
+        .search-modal .sm-stats { padding:10px 20px; font-size:12px; color:var(--t3); border-top:1px solid var(--border); }
+        .sm-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+        .sm-item:last-child { border-bottom:none; }
+        .sm-item:hover .si-title { color:var(--accent); }
+        .sm-item .si-cover { width:80px; height:50px; border-radius:6px; overflow:hidden; flex-shrink:0; background:var(--tag-bg); }
+        .sm-item .si-cover img { width:100%; height:100%; object-fit:cover; }
+        .sm-item .si-info { flex:1; min-width:0; }
+        .sm-item .si-title { font-size:14px; font-weight:600; transition:color .2s; }
+        .sm-item .si-meta { font-size:12px; color:var(--t3); margin-top:3px; }
+
+        /* ===== 404 ===== */
+        .error-page { text-align:center; padding:120px 24px; }
+        .error-page .e-code { font-size:96px; font-weight:800; line-height:1; background:var(--grd); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .error-page .e-text { font-size:18px; font-weight:600; margin:12px 0 8px; }
+        .error-page p { font-size:14px; color:var(--t2); margin-bottom:28px; }
+
+        /* ===== 空状态 ===== */
+        .empty-state { text-align:center; padding:80px 24px; color:var(--t3); }
+        .empty-state i { font-size:52px; margin-bottom:16px; opacity:.5; }
+        .empty-state p { font-size:15px; }
+
+        @media (max-width:1200px) {
+            .home-layout { gap:32px; }
+            .article-item .cover { width:200px; height:130px; }
+        }
+        @media (max-width:900px) {
+            .home-layout { flex-direction:column; }
+            .home-sidebar { width:100%; }
+            .article-item .cover { width:160px; height:110px; }
+            .about-body { padding:24px; }
+            .skill-grid { grid-template-columns:1fr; }
+        }
+        @media (max-width:600px) {
+            .nav-menu { display:none; }
+            .nav-desktop { display:none; }
+            .hamburger { display:flex; }
+            .banner { height:280px; }
+            .banner-content h1 { font-size:30px; }
+            .page-title-banner { height:180px; }
+            .page-title-banner .banner-content h1 { font-size:26px; }
+            .article-item { flex-direction:column; }
+            .article-item .cover { width:100%; height:160px; }
+            .stats-bar { flex-wrap:wrap; gap:20px; }
+            .about-header { padding:40px 24px 36px; }
+            .badge { bottom:12px; right:12px; padding:10px 14px; font-size:12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== 导航栏 ===== -->
+<nav class="navbar">
+    <div class="container">
+        <a href="#" class="logo">牵强</a>
+        <ul class="nav-menu">
+            <li><a href="#" class="active">首页</a></li>
+            <li><a href="#">分类</a></li>
+            <li><a href="#">标签</a></li>
+            <li><a href="#">关于</a></li>
+        </ul>
+        <div class="nav-right">
+            <button class="search-btn" id="searchBtn" title="搜索"><i class="fas fa-search"></i></button>
+            <button class="theme-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+            <a href="#" class="btn btn-outline btn-sm nav-desktop">登录</a>
+            <a href="#" class="btn btn-primary btn-sm nav-desktop">注册</a>
+            <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== 移动端菜单浮层 ===== -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<div class="mobile-nav-panel" id="mobileNavPanel">
+    <div class="mnp-header">
+        <span class="logo">牵强</span>
+        <button class="mnp-close" id="mobileNavClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mnp-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="搜索文章...">
+    </div>
+    <ul class="mnp-links">
+        <li><a href="#" class="active"><i class="fas fa-home"></i> 首页</a></li>
+        <li><a href="#"><i class="fas fa-folder-open"></i> 分类</a></li>
+        <li><a href="#"><i class="fas fa-tags"></i> 标签</a></li>
+        <li><a href="#"><i class="fas fa-user"></i> 关于</a></li>
+    </ul>
+    <div class="mnp-actions">
+        <a href="#" class="btn btn-outline btn-sm">登录</a>
+        <a href="#" class="btn btn-primary btn-sm">注册</a>
+    </div>
+</div>
+
+<!-- ===== Banner ===== -->
+<section class="banner">
+    <div class="banner-overlay"></div>
+    <div class="banner-stars" id="bannerStars"></div>
+    <div class="banner-shape"></div>
+    <div class="banner-shape2"></div>
+    <div class="banner-content">
+        <h1>牵强</h1>
+        <p class="typed-sub"><span id="typedText"></span><span class="typed-cursor">|</span></p>
+        <div class="banner-line"></div>
+    </div>
+    <div class="scroll-down"><i class="fas fa-angle-down"></i></div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     首页：两栏布局                              -->
+<!-- ============================================================== -->
+<section class="container">
+    <div class="home-layout">
+        <!-- 左侧：文章列表 -->
+        <div class="home-main">
+            <div class="section-title">
+                <i class="fas fa-pen-fancy"></i> 最新文章
+                <span class="count">共 24 篇</span>
+            </div>
+            <div class="article-list">
+                <div class="article-item">
+                    <div class="cover"><img src="https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+                    <div class="info">
+                        <h3>深入理解 Vue 3 组合式 API：从 Options 到 Composition 的优雅蜕变</h3>
+                        <p class="desc">Vue 3 的组合式 API 不仅是一种新的编码方式，更是一种组织代码逻辑的思维革新。本文带你从头理解 Composition API 的设计哲学与实践用法。</p>
+                        <div class="meta">
+                            <span style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">Vue</span>
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">Composition API</span>
+                            </span>
+                            <span><i class="far fa-calendar-alt"></i> 2026-07-12</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="article-item">
+                    <div class="cover"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+                    <div class="info">
+                        <h3>Go 语言 Gin 框架实战：构建高性能 RESTful API</h3>
+                        <p class="desc">从零搭建生产可用的 Gin 项目，涵盖路由组织、中间件、参数校验、错误处理等核心话题，附完整代码示例。</p>
+                        <div class="meta">
+                            <span style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">Go</span>
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">Gin</span>
+                            </span>
+                            <span><i class="far fa-calendar-alt"></i> 2026-07-08</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="article-item">
+                    <div class="cover"><img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+                    <div class="info">
+                        <h3>CSS 容器查询实战：告别媒体查询的响应式新范式</h3>
+                        <p class="desc">Container Queries 终于来了！学习如何基于容器尺寸而非视口尺寸做响应式布局。</p>
+                        <div class="meta">
+                            <span style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">CSS</span>
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">响应式</span>
+                            </span>
+                            <span><i class="far fa-calendar-alt"></i> 2026-07-03</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="article-item">
+                    <div class="cover"><img src="https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+                    <div class="info">
+                        <h3>MySQL 索引优化实战：从慢查询到毫秒级响应的全记录</h3>
+                        <p class="desc">一次真实的线上慢查询优化经历，覆盖 explain 分析、索引设计、覆盖索引等核心优化手段。</p>
+                        <div class="meta">
+                            <span style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">MySQL</span>
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">优化</span>
+                            </span>
+                            <span><i class="far fa-calendar-alt"></i> 2026-06-28</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="article-item">
+                    <div class="cover"><img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+                    <div class="info">
+                        <h3>TypeScript 5.x 高级类型体操：从入门到精通</h3>
+                        <p class="desc">条件类型、映射类型、模板字面量类型、infer 关键字……掌握这些高级类型工具。</p>
+                        <div class="meta">
+                            <span style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">TypeScript</span>
+                                <span class="tag" style="background:#eef1ff;color:#5b7cfa;">类型</span>
+                            </span>
+                            <span><i class="far fa-calendar-alt"></i> 2026-06-21</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pagination">
+                <button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <span style="color:var(--t3);font-size:13px;">…</span>
+                <button class="page-btn">5</button>
+                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <!-- 右侧：侧边栏 -->
+        <aside class="home-sidebar">
+            <div class="sidebar-card profile-card">
+                <div class="profile-avatar">牵</div>
+                <h3>牵强</h3>
+                <p class="bio">全栈开发者，热爱开源与分享。<br>专注于 Web 技术、Go 后端、前端工程化。</p>
+                <div class="profile-stats">
+                    <div><div class="n">24</div><div class="l">文章</div></div>
+                    <div><div class="n">6</div><div class="l">分类</div></div>
+                    <div><div class="n">12</div><div class="l">标签</div></div>
+                </div>
+            </div>
+            <div class="sidebar-card">
+                <h4><i class="fas fa-fire"></i> 热门排行</h4>
+                <ul class="latest-list">
+                    <li>
+                        <div class="ll-thumb"><img src="https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=120&h=90&fit=crop" alt="" loading="lazy"></div>
+                        <div class="ll-info">
+                            <div class="ll-title">MySQL 索引优化实战</div>
+                            <div class="ll-date">2026-06-28</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ll-thumb"><img src="https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=120&h=90&fit=crop" alt="" loading="lazy"></div>
+                        <div class="ll-info">
+                            <div class="ll-title">深入理解 Vue 3 组合式 API</div>
+                            <div class="ll-date">2026-07-12</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ll-thumb"><img src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=120&h=90&fit=crop" alt="" loading="lazy"></div>
+                        <div class="ll-info">
+                            <div class="ll-title">Docker 容器化部署 Go 应用</div>
+                            <div class="ll-date">2026-06-15</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ll-thumb"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=120&h=90&fit=crop" alt="" loading="lazy"></div>
+                        <div class="ll-info">
+                            <div class="ll-title">Go 语言 Gin 框架实战</div>
+                            <div class="ll-date">2026-07-08</div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="ll-thumb"><img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=120&h=90&fit=crop" alt="" loading="lazy"></div>
+                        <div class="ll-info">
+                            <div class="ll-title">CSS 容器查询实战</div>
+                            <div class="ll-date">2026-07-03</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     分类列表页                                   -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 分类页 ▼</span></div>
+
+<section class="container" style="padding-bottom:40px;">
+    <div class="section-title" style="justify-content:space-between;flex-wrap:wrap;">
+        <span><i class="fas fa-folder-open" style="color:var(--accent)"></i> 分类</span>
+        <span style="font-size:14px;font-weight:400;color:var(--t3);">共 5 个分类</span>
+    </div>
+    <div class="cat-list">
+        <div class="cat-item">
+            <span class="ci-name">前端</span>
+            <span class="ci-count">10 篇文章</span>
+            <span class="ci-arrow"><i class="fas fa-chevron-right"></i></span>
+        </div>
+        <div class="cat-item">
+            <span class="ci-name">后端</span>
+            <span class="ci-count">8 篇文章</span>
+            <span class="ci-arrow"><i class="fas fa-chevron-right"></i></span>
+        </div>
+        <div class="cat-item">
+            <span class="ci-name">数据库</span>
+            <span class="ci-count">4 篇文章</span>
+            <span class="ci-arrow"><i class="fas fa-chevron-right"></i></span>
+        </div>
+        <div class="cat-item">
+            <span class="ci-name">DevOps</span>
+            <span class="ci-count">2 篇文章</span>
+            <span class="ci-arrow"><i class="fas fa-chevron-right"></i></span>
+        </div>
+        <div class="cat-item">
+            <span class="ci-name">杂谈</span>
+            <span class="ci-count">0 篇文章</span>
+            <span class="ci-arrow"><i class="fas fa-chevron-right"></i></span>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     分类详情页                                   -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 分类详情页（点击分类后） ▼</span></div>
+
+<section class="container" style="padding-bottom:40px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <span style="font-size:18px;font-weight:800;">当前分类：</span>
+        <span style="padding:5px 18px;border-radius:16px;background:var(--grd);color:#fff;font-size:15px;font-weight:600;">前端</span>
+        <span style="font-size:13px;color:var(--t3);">共 10 篇文章，按时间倒序</span>
+    </div>
+    <div class="article-list">
+        <div class="article-item" style="padding:16px 20px;gap:16px;">
+            <div class="cover" style="width:160px;height:100px;"><img src="https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+            <div class="info">
+                <h3 style="font-size:15px;">深入理解 Vue 3 组合式 API：从 Options 到 Composition 的优雅蜕变</h3>
+                <div class="meta">
+                    <span style="display:flex;gap:4px;"><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Vue</span><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Composition API</span></span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-07-12</span>
+                </div>
+            </div>
+        </div>
+        <div class="article-item" style="padding:16px 20px;gap:16px;">
+            <div class="cover" style="width:160px;height:100px;"><img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+            <div class="info">
+                <h3 style="font-size:15px;">CSS 容器查询实战：告别媒体查询的响应式新范式</h3>
+                <div class="meta">
+                    <span style="display:flex;gap:4px;"><span class="tag" style="background:#eef1ff;color:#5b7cfa;">CSS</span><span class="tag" style="background:#eef1ff;color:#5b7cfa;">响应式</span></span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-07-03</span>
+                </div>
+            </div>
+        </div>
+        <div class="article-item" style="padding:16px 20px;gap:16px;">
+            <div class="cover" style="width:160px;height:100px;"><img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+            <div class="info">
+                <h3 style="font-size:15px;">TypeScript 5.x 高级类型体操：从入门到精通</h3>
+                <div class="meta">
+                    <span style="display:flex;gap:4px;"><span class="tag" style="background:#eef1ff;color:#5b7cfa;">TypeScript</span><span class="tag" style="background:#eef1ff;color:#5b7cfa;">类型</span></span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-06-21</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="pagination" style="margin-top:20px;">
+        <button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     关于页面                                    -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 标签页（展示所有标签） ▼</span></div>
+
+<section class="container" style="padding-bottom:40px;">
+    <div class="section-title" style="margin-bottom:8px;">
+        <i class="fas fa-tags" style="color:var(--accent)"></i> 标签
+    </div>
+    <p style="font-size:14px;color:var(--t3);margin-bottom:20px;">点击标签查看对应文章</p>
+    <div class="tags-page-grid">
+        <span class="tag-item">Vue <span class="count">(5)</span></span>
+        <span class="tag-item" style="background:var(--grd);color:#fff;border-color:transparent;">Go <span class="count" style="color:rgba(255,255,255,.7)">(8)</span></span>
+        <span class="tag-item">CSS <span class="count">(3)</span></span>
+        <span class="tag-item">MySQL <span class="count">(4)</span></span>
+        <span class="tag-item">TypeScript <span class="count">(2)</span></span>
+        <span class="tag-item">Docker <span class="count">(2)</span></span>
+        <span class="tag-item">Redis <span class="count">(3)</span></span>
+        <span class="tag-item">Git <span class="count">(2)</span></span>
+        <span class="tag-item">Linux <span class="count">(4)</span></span>
+        <span class="tag-item">Nginx <span class="count">(1)</span></span>
+        <span class="tag-item">WebSocket <span class="count">(2)</span></span>
+        <span class="tag-item">RESTful <span class="count">(3)</span></span>
+    </div>
+</section>
+
+<div class="demo-label"><span>▼ 标签详情页（点击标签后） ▼</span></div>
+
+<section class="container" style="padding-bottom:40px;">
+    <div class="section-title" style="margin-bottom:8px;">
+        <i class="fas fa-tags" style="color:var(--accent)"></i> 标签：Go
+        <span style="font-size:14px;color:var(--t3);font-weight:400;margin-left:12px;">共 8 篇文章 · 按时间倒序</span>
+    </div>
+    <div class="article-list">
+        <div class="article-item" style="padding:16px 20px;gap:16px;">
+            <div class="cover" style="width:160px;height:100px;"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+            <div class="info">
+                <h3 style="font-size:15px;">Go 语言 Gin 框架实战：构建高性能 RESTful API</h3>
+                <div class="meta">
+                    <span style="display:flex;gap:4px;"><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Go</span><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Gin</span></span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-07-08</span>
+                </div>
+            </div>
+        </div>
+        <div class="article-item" style="padding:16px 20px;gap:16px;">
+            <div class="cover" style="width:160px;height:100px;"><img src="https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+            <div class="info">
+                <h3 style="font-size:15px;">Docker 容器化部署 Go 应用的完整指南</h3>
+                <div class="meta">
+                    <span style="display:flex;gap:4px;"><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Go</span><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Docker</span></span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-06-15</span>
+                </div>
+            </div>
+        </div>
+        <div class="article-item" style="padding:16px 20px;gap:16px;">
+            <div class="cover" style="width:160px;height:100px;"><img src="https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=260&fit=crop" alt="" loading="lazy"></div>
+            <div class="info">
+                <h3 style="font-size:15px;">Go 并发编程：从 goroutine 到 channel 实战</h3>
+                <div class="meta">
+                    <span style="display:flex;gap:4px;"><span class="tag" style="background:#eef1ff;color:#5b7cfa;">Go</span><span class="tag" style="background:#eef1ff;color:#5b7cfa;">并发</span></span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-05-28</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="pagination" style="margin-top:20px;">
+        <button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+</section>
+
+<div class="demo-label"><span>▼ 关于页面 ▼</span></div>
+
+<section class="container">
+    <div class="about-wrapper">
+
+        <!-- ===== 关于主卡片 ===== -->
+        <div class="about-card">
+
+            <!-- 头部：头像 + 名字 + 签名 -->
+            <div class="about-header">
+                <div class="stars-mini" id="aboutStars"></div>
+                <div class="about-avatar">牵</div>
+                <h1>牵强</h1>
+                <p class="tagline">全栈开发者 · 热爱开源与分享</p>
+            </div>
+
+            <!-- 正文 -->
+            <div class="about-body">
+
+                <!-- 个人简介 -->
+                <div class="about-section">
+                    <div class="about-section-title">
+                        <i class="fas fa-user"></i> 关于我
+                    </div>
+                    <p>
+                        你好，我是牵强，一名全栈开发者。从大学时期第一次写出 "Hello World" 到现在，
+                        编程已经成为了我生活的一部分。我喜欢研究 Web 技术，尤其是前端工程化和 Go 后端开发。
+                    </p>
+                    <p>
+                        这个博客是我记录技术思考、分享开发心得的地方。每一篇文章都是我在实际项目中踩过的坑、
+                        读过的源码、思考后的总结。希望能给路过的你带来一些启发。
+                    </p>
+                    <p>
+                        我相信 —— <strong>最好的学习方式是输出</strong>。
+                    </p>
+                </div>
+
+                <!-- 技术栈 -->
+                <div class="about-section">
+                    <div class="about-section-title">
+                        <i class="fas fa-code"></i> 技术栈
+                    </div>
+                    <div class="skill-grid">
+                        <div class="skill-group">
+                            <div class="label">后端</div>
+                            <div class="items">
+                                <span>Go</span>
+                                <span>Gin</span>
+                                <span>MySQL</span>
+                                <span>Redis</span>
+                            </div>
+                        </div>
+                        <div class="skill-group">
+                            <div class="label">前端</div>
+                            <div class="items">
+                                <span>Vue 3</span>
+                                <span>TypeScript</span>
+                                <span>CSS</span>
+                                <span>JavaScript</span>
+                            </div>
+                        </div>
+                        <div class="skill-group">
+                            <div class="label">工具 & 部署</div>
+                            <div class="items">
+                                <span>Docker</span>
+                                <span>Git</span>
+                                <span>Linux</span>
+                                <span>Nginx</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 联系方式 -->
+                <div class="about-section">
+                    <div class="about-section-title">
+                        <i class="fas fa-paper-plane"></i> 联系我
+                    </div>
+                    <div class="contact-list">
+                        <div class="contact-item">
+                            <div class="ci-icon"><i class="fab fa-github"></i></div>
+                            <div class="ci-body">
+                                <div class="ci-label">GitHub</div>
+                                <div class="ci-value">github.com/qianqiang</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="ci-icon"><i class="fas fa-envelope"></i></div>
+                            <div class="ci-body">
+                                <div class="ci-label">Email</div>
+                                <div class="ci-value">qianqiang@example.com</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="ci-icon"><i class="fab fa-weixin"></i></div>
+                            <div class="ci-body">
+                                <div class="ci-label">微信</div>
+                                <div class="ci-value">qianqiang_dev</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 博客故事 -->
+                <div class="about-section">
+                    <div class="about-section-title">
+                        <i class="fas fa-book-open"></i> 关于这个博客
+                    </div>
+                    <p>
+                        「牵强」这个名字源于朋友的一句玩笑话 —— "你写代码的理由都很牵强"。
+                        我觉得挺有意思，就拿来做了博客的名字。算是一种自嘲，也是一种提醒：
+                        写每一行代码、每一篇文章，都要有经得起推敲的理由。
+                    </p>
+                    <div style="margin-top:16px;">
+                        <div class="story-item">
+                            <div class="si-dot"></div>
+                            <div class="si-content">
+                                <div class="si-time">2025 年初</div>
+                                <div class="si-text">萌生了搭建个人博客的想法，开始规划技术栈和设计方案。</div>
+                            </div>
+                        </div>
+                        <div class="story-item">
+                            <div class="si-dot"></div>
+                            <div class="si-content">
+                                <div class="si-time">2025 年中</div>
+                                <div class="si-text">第一版上线，用 Go + Vue 3 实现了基础的文章展示和认证功能。</div>
+                            </div>
+                        </div>
+                        <div class="story-item">
+                            <div class="si-dot"></div>
+                            <div class="si-content">
+                                <div class="si-time">至今</div>
+                                <div class="si-text">持续迭代中 —— 已发布 24 篇文章，总阅读量超过 1.8 万。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     文章详情页                                 -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 文章详情页 ▼</span></div>
+
+<section class="container detail-page">
+    <div class="detail-article">
+        <div class="da-cover">
+            <img src="https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&h=680&fit=crop" alt="">
+        </div>
+        <div class="da-body">
+            <div class="da-header">
+                <h1>深入理解 Vue 3 组合式 API：从 Options 到 Composition 的优雅蜕变</h1>
+                <div class="da-meta">
+                    <span class="dm-tag" style="background:var(--tag-bg);color:var(--tag-c);">前端</span>
+                    <span><i class="far fa-calendar-alt"></i> 2026-07-12</span>
+                    <span><i class="far fa-eye"></i> 1,284 次浏览</span>
+                    <span><i class="far fa-heart"></i> 36 赞</span>
+                    <span><i class="far fa-comment"></i> 12 条评论</span>
+                </div>
+            </div>
+            <div class="da-content">
+                <p>Vue 3 的 Composition API 是近年来前端框架中最重要的革新之一。它不仅改变了我们编写 Vue 组件的方式，更深刻地影响了前端代码的组织哲学。</p>
+                <h2>为什么需要 Composition API？</h2>
+                <p>在 Vue 2 中，同一个功能的代码会被分散在 data、computed、methods、watch 等选项中。Composition API 允许我们将相关逻辑聚合在一起。</p>
+                <blockquote>Composition API 的核心目标不是替代 Options API，而是提供更灵活的逻辑组织和复用方式。</blockquote>
+                <h2>基础用法示例</h2>
+                <pre><code>import { ref, computed } from 'vue'
+
+function useCounter(initial = 0) {
+  const count = ref(initial)
+  const double = computed(() => count.value * 2)
+  function increment() { count.value++ }
+  function decrement() { count.value-- }
+  return { count, double, increment, decrement }
+}</code></pre>
+                <p>通过将计数器逻辑封装在 <code>useCounter</code> 中，我们可以在多个组件中复用这段逻辑。</p>
+            </div>
+            <div class="da-tags">
+                <span>Vue</span><span>Composition API</span><span>Vue 3</span><span>前端</span>
+            </div>
+            <div class="da-like">
+                <button class="like-button liked"><i class="fas fa-heart"></i> 36 赞</button>
+                <span style="font-size:13px;color:var(--t3);">已点赞</span>
+            </div>
+        </div>
+        <div class="da-comments">
+            <h3><i class="far fa-comment-dots"></i> 评论 (12)</h3>
+            <div class="comment-input">
+                <input type="text" placeholder="你的昵称" value="游客_7x3k">
+                <textarea placeholder="写下你的评论…"></textarea>
+                <button class="btn btn-primary" style="align-self:flex-end;">发表评论</button>
+            </div>
+            <div class="dc-item">
+                <div class="dc-avatar">F</div>
+                <div class="dc-body">
+                    <div class="dc-name">Feng <span class="dc-time">2026-07-13 14:23</span></div>
+                    <div class="dc-text">写得很清楚，组合式 API 确实让代码组织更清爽了。</div>
+                    <span class="dc-reply"><i class="far fa-reply"></i> 回复</span>
+                </div>
+            </div>
+            <div class="dc-item">
+                <div class="dc-avatar">L</div>
+                <div class="dc-body">
+                    <div class="dc-name">Leo <span class="dc-time">2026-07-13 10:05</span></div>
+                    <div class="dc-text">推荐看一下 VueUse，里面有很多现成的组合函数可以直接用。</div>
+                    <span class="dc-reply"><i class="far fa-reply"></i> 回复</span>
+                </div>
+            </div>
+            <div class="dc-children">
+                <div class="dc-item">
+                    <div class="dc-avatar">牵</div>
+                    <div class="dc-body">
+                        <div class="dc-name">牵强 <span class="dc-author">作者</span> <span class="dc-time">2026-07-13 11:30</span></div>
+                        <div class="dc-text">没错，VueUse 确实很棒！</div>
+                        <span class="dc-reply"><i class="far fa-reply"></i> 回复</span>
+                    </div>
+                </div>
+            </div>
+            <div class="dc-item">
+                <div class="dc-avatar">T</div>
+                <div class="dc-body">
+                    <div class="dc-name">Tom <span class="dc-time">2026-07-12 22:18</span></div>
+                    <div class="dc-text">博主写的教程都很用心，期待下一篇！</div>
+                    <span class="dc-reply"><i class="far fa-reply"></i> 回复</span>
+                </div>
+            </div>
+            <div class="pagination" style="margin-top:24px;">
+                <button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     登录页                                     -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 登录页 ▼</span></div>
+
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>牵强</h1>
+        <p class="sub">登录你的账号</p>
+        <div class="field"><label>用户名</label><input type="text" placeholder="请输入用户名"></div>
+        <div class="field"><label>密码</label><input type="password" placeholder="请输入密码"></div>
+        <button class="auth-btn">登 录</button>
+        <p class="auth-link">还没有账号？<a href="#">去注册</a></p>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                     注册页                                     -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 注册页 ▼</span></div>
+
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>牵强</h1>
+        <p class="sub">创建一个新账号</p>
+        <div class="field"><label>用户名</label><input type="text" placeholder="请输入用户名"></div>
+        <div class="field"><label>邮箱</label><input type="email" placeholder="请输入邮箱"></div>
+        <div class="field"><label>密码</label><input type="password" placeholder="请输入密码"></div>
+        <div class="field"><label>确认密码</label><input type="password" placeholder="请再次输入密码"></div>
+        <button class="auth-btn">注 册</button>
+        <p class="auth-link">已有账号？<a href="#">去登录</a></p>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                    搜索浮层                                     -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 搜索浮层（点导航栏 🔍 弹出；此处点下方按钮预览） ▼</span></div>
+<div style="text-align:center;padding-bottom:20px;">
+    <button class="btn btn-primary" id="demoOpenSearch">点我预览搜索浮层</button>
+</div>
+
+<div class="search-modal-overlay" id="searchModal">
+    <div class="search-modal">
+        <div class="sm-header">
+            <h3><i class="fas fa-search"></i> 搜索文章</h3>
+            <button class="sm-close" id="searchModalClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sm-input">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="输入关键词搜索文章…" autocomplete="off">
+        </div>
+        <div class="sm-stats" id="searchStats">输入关键词开始搜索</div>
+        <div class="sm-body" id="searchResults">
+            <div class="sm-empty" id="searchEmpty">
+                <i class="fas fa-search"></i>
+                <p>试试搜索「Vue」「Go」「CSS」…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!--                    404 页                                       -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 404 页 ▼</span></div>
+
+<section class="container">
+    <div class="error-page">
+        <div class="e-code">404</div>
+        <p class="e-text">页面走丢了，去别处看看吧～</p>
+        <p>你访问的页面不存在，可能已被删除或从未存在过。</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="#" class="btn btn-primary"><i class="fas fa-home"></i> 返回首页</a>
+            <a href="#" class="btn btn-outline"><i class="fas fa-search"></i> 搜索文章</a>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================== -->
+<!--                    空状态                                       -->
+<!-- ============================================================== -->
+<div class="demo-label"><span>▼ 空状态（分类 / 标签 / 搜索结果无文章时） ▼</span></div>
+
+<section class="container" style="padding-bottom:40px;">
+    <div class="empty-state">
+        <i class="far fa-folder-open"></i>
+        <p>该分类下暂无文章</p>
+        <span>换个分类看看，或者去写一篇吧</span>
+    </div>
+</section>
+
+<!-- ===== 页脚 ===== -->
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 牵强 &middot; Built with <span class="heart">❤</span> &amp; Vue 3 + Go</p>
+    </div>
+</footer>
+
+<div class="badge">
+    <i class="fas fa-paint-brush"></i>
+    <div>
+        完整原型 · 所有页面
+        <small>首页 · 分类 · 标签 · 关于 · 文章详情 · 搜索 · 登录 · 注册 · 404</small>
+    </div>
+</div>
+
+<script>
+    // === 星星 ===
+    function makeStars(id, count) {
+        const c = document.getElementById(id);
+        if (!c) return;
+        for (let i=0;i<count;i++){
+            const s=document.createElement('div'); s.className='star';
+            s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+            s.style.animationDuration=(2+Math.random()*4)+'s';
+            s.style.animationDelay=Math.random()*4+'s';
+            s.style.width=s.style.height=(1+Math.random()*2)+'px';
+            c.appendChild(s);
+        }
+    }
+    makeStars('bannerStars', 80);
+    makeStars('aboutStars', 30);
+
+    // === 主题 ===
+    const t=document.getElementById('themeToggle'),h=document.documentElement,ic=t.querySelector('i');
+    const saved=localStorage.getItem('theme');
+    if(saved){h.setAttribute('data-theme',saved);ic.className=saved==='dark'?'fas fa-sun':'fas fa-moon';}
+    t.addEventListener('click',()=>{
+        const cur=h.getAttribute('data-theme'),next=cur==='dark'?'light':'dark';
+        h.setAttribute('data-theme',next);ic.className=next==='dark'?'fas fa-sun':'fas fa-moon';
+        localStorage.setItem('theme',next);
+    });
+
+    // === 移动端菜单 ===
+    const hBtn=document.getElementById('hamburgerBtn'),panel=document.getElementById('mobileNavPanel'),overlay=document.getElementById('mobileNavOverlay'),closeBtn=document.getElementById('mobileNavClose');
+    function openNav(){panel.classList.add('open');overlay.classList.add('active');document.body.style.overflow='hidden';}
+    function closeNav(){panel.classList.remove('open');overlay.classList.remove('active');document.body.style.overflow='';}
+    if(hBtn) hBtn.addEventListener('click',openNav);
+    if(closeBtn) closeBtn.addEventListener('click',closeNav);
+    if(overlay) overlay.addEventListener('click',closeNav);
+
+    // === 打字机副标题 ===
+    const typedPhrases=["记录技术思考，分享开发心得","全栈开发者 · Go & Vue","最好的学习方式是输出"];
+    const typedEl=document.getElementById('typedText');
+    let pi=0,ci=0,deleting=false;
+    function typeTick(){
+        if(!typedEl) return;
+        const cur=typedPhrases[pi];
+        if(!deleting){
+            ci++; typedEl.textContent=cur.slice(0,ci);
+            if(ci===cur.length){ deleting=true; setTimeout(typeTick,1600); return; }
+            setTimeout(typeTick,110);
+        }else{
+            ci--; typedEl.textContent=cur.slice(0,ci);
+            if(ci===0){ deleting=false; pi=(pi+1)%typedPhrases.length; }
+            setTimeout(typeTick,45);
+        }
+    }
+    typeTick();
+
+    // === 搜索浮层 ===
+    const searchModal=document.getElementById('searchModal'),
+          searchBtn=document.getElementById('searchBtn'),
+          smClose=document.getElementById('searchModalClose'),
+          demoOpen=document.getElementById('demoOpenSearch'),
+          searchInput=document.getElementById('searchInput'),
+          searchResults=document.getElementById('searchResults'),
+          searchEmpty=document.getElementById('searchEmpty'),
+          searchStats=document.getElementById('searchStats');
+    const demoPosts=[
+        {t:'深入理解 Vue 3 组合式 API',tag:'Vue',date:'2026-07-12'},
+        {t:'Go 语言 Gin 框架实战：构建高性能 RESTful API',tag:'Go',date:'2026-07-08'},
+        {t:'CSS 容器查询实战',tag:'CSS',date:'2026-07-03'},
+        {t:'MySQL 索引优化实战',tag:'MySQL',date:'2026-06-28'},
+        {t:'Docker 容器化部署 Go 应用的完整指南',tag:'Docker',date:'2026-06-15'}
+    ];
+    function openSearch(){ searchModal.classList.add('active'); document.body.style.overflow='hidden'; if(searchInput) setTimeout(()=>searchInput.focus(),80); }
+    function closeSearch(){ searchModal.classList.remove('active'); document.body.style.overflow=''; }
+    if(searchBtn) searchBtn.addEventListener('click',openSearch);
+    if(demoOpen) demoOpen.addEventListener('click',openSearch);
+    if(smClose) smClose.addEventListener('click',closeSearch);
+    if(searchModal) searchModal.addEventListener('click',e=>{ if(e.target===searchModal) closeSearch(); });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&searchModal&&searchModal.classList.contains('active')) closeSearch(); });
+    function renderResults(kw){
+        if(!searchResults||!searchEmpty||!searchStats) return;
+        kw=(kw||'').trim().toLowerCase();
+        searchResults.innerHTML='';
+        if(!kw){ searchStats.textContent='输入关键词开始搜索'; searchResults.appendChild(searchEmpty); return; }
+        const hits=demoPosts.filter(p=>(p.t+p.tag).toLowerCase().includes(kw));
+        searchStats.textContent=hits.length?`找到 ${hits.length} 篇相关文章`:'没有匹配的文章';
+        if(!hits.length){ searchEmpty.querySelector('p').textContent='没有找到相关文章，换个关键词试试'; searchResults.appendChild(searchEmpty); return; }
+        hits.forEach(p=>{
+            const item=document.createElement('div'); item.className='sm-item';
+            item.innerHTML=`<div class="si-cover"><img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=120&h=76&fit=crop" alt="" loading="lazy"></div>
+            <div class="si-info">
+                <div class="si-title">${p.t}</div>
+                <div class="si-meta"><i class="far fa-calendar-alt"></i> ${p.date} &nbsp;·&nbsp; <span style="color:var(--accent)">${p.tag}</span></div>
+            </div>`;
+            searchResults.appendChild(item);
+        });
+    }
+    if(searchInput) searchInput.addEventListener('input',()=>renderResults(searchInput.value));
+</script>
+</body>
+</html>

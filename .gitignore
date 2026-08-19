@@ -1,0 +1,20 @@
+# 构建产物
+blog-api
+blog-api.exe
+*.exe
+
+# 日志
+logs/
+*.log
+
+# 本地配置（含数据库密码 / JWT 密钥，不入库）
+config.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 系统
+.DS_Store
+Thumbs.db
