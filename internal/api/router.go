@@ -1,27 +1,28 @@
 package api
 
 import (
+	"blog/internal/api/v1/article"
+	"blog/internal/api/v1/author"
 	"blog/internal/middleware"
+	"blog/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Router 路由
 type Router struct {
-	// ========== 在这里添加你的 Controller 字段 ==========
-	// userCtrl  *user.Controller
-	// authCtrl  *auth.Controller
+	articleCtrl *article.Controller
+	authorCtrl  *author.Controller
 }
 
 // NewRouter 创建路由
 func NewRouter(
-// ========== 在这里添加你的 Service 参数（依赖注入） ==========
-// userService service.UserService,
-// authService service.AuthService,
+	articleSvc service.ArticleService,
+	authorSvc service.AuthorService,
 ) *Router {
 	return &Router{
-		// userCtrl: user.NewController(userService),
-		// authCtrl: auth.NewController(authService),
+		articleCtrl: article.NewController(articleSvc),
+		authorCtrl:  author.NewController(authorSvc),
 	}
 }
 
@@ -41,12 +42,10 @@ func (r *Router) Setup(engine *gin.Engine) {
 	})
 
 	// API 路由组
-	apiGroup := engine.Group("/api")
+	apiGroup := engine.Group("/api/v1")
 	{
-		_ = apiGroup
-		// ========== 在这里注册你的路由 ==========
-		// r.authCtrl.RegisterRoutes(apiGroup)
-		// r.userCtrl.RegisterRoutes(apiGroup)
+		r.articleCtrl.RegisterRoutes(apiGroup)
+		r.authorCtrl.RegisterRoutes(apiGroup)
 	}
 }
 

@@ -17,6 +17,8 @@ type Article struct {
 	CommentCount int        `gorm:"column:comment_count;type:int;not null;default:0" json:"comment_count"`
 	Hot          int        `gorm:"column:hot;type:int;not null;default:0;index" json:"hot"` // 热门权重：越大越热，按照规则计算
 	PublishedAt  *time.Time `gorm:"column:published_at" json:"published_at"`
+	Author       *Author    `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
+	Category     *Category  `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
 }
 
 func (Article) TableName() string { return "articles" }

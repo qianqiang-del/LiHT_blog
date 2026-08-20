@@ -11,6 +11,8 @@ import (
 
 	"blog/internal/api"
 	"blog/internal/model/entity"
+	"blog/internal/repository"
+	"blog/internal/service"
 	"blog/pkg/config"
 	"blog/pkg/database"
 	"blog/pkg/logger"
@@ -104,13 +106,13 @@ func (a *App) initDatabase() error {
 	logger.Info("开始数据库迁移...")
 	if err := a.mysqlDB.AutoMigrate(
 		&entity.User{},
+		&entity.Author{},
 		&entity.Category{},
 		&entity.Tag{},
 		&entity.Article{},
 		&entity.ArticleTag{},
 		&entity.Comment{},
 		&entity.CommentLike{},
-		&entity.SiteItem{},
 		&entity.ArticleLike{},
 	); err != nil {
 		logger.Warn("数据库迁移警告", zap.Error(err))
@@ -131,14 +133,15 @@ func (a *App) initDatabase() error {
 // initDependencies 初始化依赖注入
 func (a *App) initDependencies() {
 	// ========== 创建 Repository ==========
-	// userRepo := repository.NewUserRepository(a.mysqlDB)
-
+	articleRepo := repository.NewArticleRepository(a.mysqlDB)
+	authorRepo := repository.NewAuthorRepository(a.mysqlDB)
 
 	// ========== 创建 Service ==========
-	// userSvc := service.NewUserService(userRepo)
+	articleSvc := service.NewArticleService(articleRepo)
+	authorSvc := service.NewAuthorService(authorRepo)
 
 	// ========== 创建 Router ==========
-	// a.router = api.NewRouter(userSvc, authSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc)
 }
 
 // initRouter 初始化路由
