@@ -1,0 +1,9 @@
+package repository
+
+import "blog/internal/model/entity"
+
+// TagRepository 标签仓储接口
+type TagRepository interface {
+	ListTags() ([]entity.Tag, error)
+	CountArticles(tagID uint) (int64, error)
+}

@@ -6,4 +6,5 @@ import "github.com/gin-gonic/gin"
 func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/articles", ctrl.listArticles)
 	r.GET("/hot", ctrl.listHotArticles)
+	r.GET("/articles/:id", ctrl.getArticleDetail)
 }

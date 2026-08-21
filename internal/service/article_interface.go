@@ -2,6 +2,7 @@ package service
 
 import (
 	"blog/internal/model/dto/request"
+	dto "blog/internal/model/dto/response"
 	"blog/pkg/response"
 )
 
@@ -9,4 +10,5 @@ import (
 type ArticleService interface {
 	ListArticles(req request.ArticleListRequest) (*response.PageResponse, error)
 	ListHotArticles(req request.ArticleListRequest) (*response.PageResponse, error)
+	GetArticleDetail(id uint) (*dto.ArticleDetail, error)
 }

@@ -55,3 +55,52 @@ func (r *redisRepository) Exists(ctx context.Context, key string) (bool, error) 
 	n, err := r.redis.Exists(ctx, key).Result()
 	return n > 0, err
 }
+
+// XAdd 向 Stream 追加消息
+func (r *redisRepository) XAdd(ctx context.Context, stream string, values map[string]interface{}) error {
+	if r.redis == nil {
+		return nil
+	}
+	return r.redis.XAdd(ctx, &redis.XAddArgs{
+		Stream: stream,
+		Values: values,
+	}).Err()
+}
+
+// XReadGroup 消费者组读取消息
+func (r *redisRepository) XReadGroup(ctx context.Context, group, consumer string, streams []string, count int64, block time.Duration) ([]redis.XStream, error) {
+	if r.redis == nil {
+		return nil, redis.Nil
+	}
+	return r.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
+		Group:    group,
+		Consumer: consumer,
+		Streams:  streams,
+		Count:    count,
+		Block:    block,
+	}).Result()
+}
+
+// XAck 确认消息已消费
+func (r *redisRepository) XAck(ctx context.Context, stream, group string, ids ...string) error {
+	if r.redis == nil {
+		return nil
+	}
+	return r.redis.XAck(ctx, stream, group, ids...).Err()
+}
+
+// XGroupCreate 创建消费者组（Stream 不存在时自动创建）
+func (r *redisRepository) XGroupCreate(ctx context.Context, stream, group, start string) error {
+	if r.redis == nil {
+		return nil
+	}
+	return r.redis.XGroupCreateMkStream(ctx, stream, group, start).Err()
+}
+
+// XTrimMaxLen 截断 Stream 到指定长度
+func (r *redisRepository) XTrimMaxLen(ctx context.Context, stream string, maxLen int64) error {
+	if r.redis == nil {
+		return nil
+	}
+	return r.redis.XTrimMaxLen(ctx, stream, maxLen).Err()
+}

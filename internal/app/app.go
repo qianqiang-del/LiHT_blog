@@ -13,6 +13,7 @@ import (
 	"blog/internal/model/entity"
 	"blog/internal/repository"
 	"blog/internal/service"
+	"blog/internal/stream"
 	"blog/pkg/config"
 	"blog/pkg/database"
 	"blog/pkg/logger"
@@ -24,11 +25,12 @@ import (
 
 // App 应用结构体
 type App struct {
-	cfg     *config.Config
-	mysqlDB *gorm.DB
-	redis   *redis.Client
-	router  *api.Router
-	server  *http.Server
+	cfg      *config.Config
+	mysqlDB  *gorm.DB
+	redis    *redis.Client
+	router   *api.Router
+	server   *http.Server
+	consumer *stream.Consumer
 }
 
 // NewApp 创建应用实例
@@ -135,13 +137,21 @@ func (a *App) initDependencies() {
 	// ========== 创建 Repository ==========
 	articleRepo := repository.NewArticleRepository(a.mysqlDB)
 	authorRepo := repository.NewAuthorRepository(a.mysqlDB)
+	categoryRepo := repository.NewCategoryRepository(a.mysqlDB)
+	tagRepo := repository.NewTagRepository(a.mysqlDB)
+	redisRepo := repository.NewRedisRepository(a.redis)
 
 	// ========== 创建 Service ==========
-	articleSvc := service.NewArticleService(articleRepo)
+	articleSvc := service.NewArticleService(articleRepo, redisRepo)
 	authorSvc := service.NewAuthorService(authorRepo)
+	categorySvc := service.NewCategoryService(categoryRepo)
+	tagSvc := service.NewTagService(tagRepo)
+
+	// ========== 创建 Stream 消费者 ==========
+	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
 
 	// ========== 创建 Router ==========
-	a.router = api.NewRouter(articleSvc, authorSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc)
 }
 
 // initRouter 初始化路由
@@ -169,6 +179,9 @@ func (a *App) initServer() {
 
 // Run 运行应用
 func (a *App) Run() {
+	// 启动 Stream 消费者
+	a.consumer.Start()
+
 	// 启动 HTTP 服务器
 	go func() {
 		logger.Info("HTTP 服务器启动",
@@ -205,6 +218,11 @@ func (a *App) gracefulShutdown() {
 		if err := a.router.Close(); err != nil {
 			logger.Error("关闭路由连接失败", zap.Error(err))
 		}
+	}
+
+	// 停止 Stream 消费者
+	if a.consumer != nil {
+		a.consumer.Stop()
 	}
 
 	// 关闭数据库连接

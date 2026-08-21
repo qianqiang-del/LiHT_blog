@@ -90,3 +90,22 @@ func (r *articleRepository) GetArticleTagNames(articleIDs []uint) (map[uint][]st
 	}
 	return tagMap, nil
 }
+
+// GetArticleByID 根据 ID 获取文章详情（预加载分类）
+func (r *articleRepository) GetArticleByID(id uint) (*entity.Article, error) {
+	var article entity.Article
+	if err := r.db.Preload("Category").First(&article, id).Error; err != nil {
+		return nil, err
+	}
+	return &article, nil
+}
+
+// GetArticleTags 获取文章的标签列表
+func (r *articleRepository) GetArticleTags(articleID uint) ([]entity.Tag, error) {
+	var tags []entity.Tag
+	err := r.db.Table("tags").
+		Joins("JOIN article_tags ON article_tags.tag_id = tags.id").
+		Where("article_tags.article_id = ?", articleID).
+		Find(&tags).Error
+	return tags, err
+}

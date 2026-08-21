@@ -3,6 +3,8 @@ package api
 import (
 	"blog/internal/api/v1/article"
 	"blog/internal/api/v1/author"
+	"blog/internal/api/v1/category"
+	"blog/internal/api/v1/tag"
 	"blog/internal/middleware"
 	"blog/internal/service"
 
@@ -11,18 +13,24 @@ import (
 
 // Router 路由
 type Router struct {
-	articleCtrl *article.Controller
-	authorCtrl  *author.Controller
+	articleCtrl  *article.Controller
+	authorCtrl   *author.Controller
+	categoryCtrl *category.Controller
+	tagCtrl      *tag.Controller
 }
 
 // NewRouter 创建路由
 func NewRouter(
 	articleSvc service.ArticleService,
 	authorSvc service.AuthorService,
+	categorySvc service.CategoryService,
+	tagSvc service.TagService,
 ) *Router {
 	return &Router{
-		articleCtrl: article.NewController(articleSvc),
-		authorCtrl:  author.NewController(authorSvc),
+		articleCtrl:  article.NewController(articleSvc),
+		authorCtrl:   author.NewController(authorSvc),
+		categoryCtrl: category.NewController(categorySvc),
+		tagCtrl:      tag.NewController(tagSvc),
 	}
 }
 
@@ -46,6 +54,8 @@ func (r *Router) Setup(engine *gin.Engine) {
 	{
 		r.articleCtrl.RegisterRoutes(apiGroup)
 		r.authorCtrl.RegisterRoutes(apiGroup)
+		r.categoryCtrl.RegisterRoutes(apiGroup)
+		r.tagCtrl.RegisterRoutes(apiGroup)
 	}
 }
 

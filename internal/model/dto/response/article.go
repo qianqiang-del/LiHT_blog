@@ -21,3 +21,18 @@ type HotArticleItem struct {
 	Cover       string     `json:"cover"`
 	PublishedAt *time.Time `json:"published_at"`
 }
+
+// ArticleDetail 文章详情
+type ArticleDetail struct {
+	ID           uint         `json:"id"`
+	Title        string       `json:"title"`
+	Content      string       `json:"content"`
+	Cover        string       `json:"cover"`
+	Category     *CategoryDTO `json:"category,omitempty"`
+	Tags         []TagDTO     `json:"tags"`
+	ViewCount    int          `json:"view_count"`
+	LikeCount    int          `json:"like_count"`
+	CommentCount int          `json:"comment_count"`
+	PublishedAt  *time.Time   `json:"published_at"`
+	Liked        bool         `json:"liked"`
+}
