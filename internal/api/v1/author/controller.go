@@ -27,3 +27,14 @@ func (ctrl *Controller) getAuthorDetail(c *gin.Context) {
 
 	response.Success(c, result)
 }
+
+// getAbout GET /api/v1/about
+func (ctrl *Controller) getAbout(c *gin.Context) {
+	result, err := ctrl.svc.GetAbout()
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"blog/internal/api/v1/article"
+	"blog/internal/api/v1/auth"
 	"blog/internal/api/v1/author"
 	"blog/internal/api/v1/category"
 	"blog/internal/api/v1/tag"
@@ -17,6 +18,7 @@ type Router struct {
 	authorCtrl   *author.Controller
 	categoryCtrl *category.Controller
 	tagCtrl      *tag.Controller
+	authCtrl     *auth.Controller
 }
 
 // NewRouter 创建路由
@@ -25,12 +27,14 @@ func NewRouter(
 	authorSvc service.AuthorService,
 	categorySvc service.CategoryService,
 	tagSvc service.TagService,
+	authSvc service.AuthService,
 ) *Router {
 	return &Router{
 		articleCtrl:  article.NewController(articleSvc),
 		authorCtrl:   author.NewController(authorSvc),
 		categoryCtrl: category.NewController(categorySvc),
 		tagCtrl:      tag.NewController(tagSvc),
+		authCtrl:     auth.NewController(authSvc),
 	}
 }
 
@@ -56,6 +60,7 @@ func (r *Router) Setup(engine *gin.Engine) {
 		r.authorCtrl.RegisterRoutes(apiGroup)
 		r.categoryCtrl.RegisterRoutes(apiGroup)
 		r.tagCtrl.RegisterRoutes(apiGroup)
+		r.authCtrl.RegisterRoutes(apiGroup)
 	}
 }
 

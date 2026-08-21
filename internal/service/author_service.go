@@ -49,3 +49,23 @@ func (s *authorService) GetAuthorDetail() (*dto.AuthorDTO, error) {
 		TagCount:      tagCount,
 	}, nil
 }
+
+// GetAbout 获取关于页面信息
+func (s *authorService) GetAbout() (*dto.AboutDTO, error) {
+	author, err := s.repo.GetAuthor()
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "查询作者信息失败")
+	}
+
+	return &dto.AboutDTO{
+		ID:         author.ID,
+		Nickname:   author.Nickname,
+		Avatar:     author.Avatar,
+		Bio:        author.Bio,
+		Github:     author.Github,
+		About:      author.About,
+		Background: author.Background,
+		Skills:     author.Skills,
+		AboutBlog:  author.AboutBlog,
+	}, nil
+}

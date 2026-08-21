@@ -32,3 +32,24 @@ func (r *tagRepository) CountArticles(tagID uint) (int64, error) {
 		Count(&count).Error
 	return count, err
 }
+
+// ListByTagIDs 根据标签 ID 列表查询已发布文章（OR 逻辑，分页）
+func (r *tagRepository) ListByTagIDs(tagIDs []uint, offset, limit int) ([]entity.Article, int64, error) {
+	var articles []entity.Article
+	var total int64
+
+	query := r.db.Table("articles").
+		Joins("JOIN article_tags ON article_tags.article_id = articles.id").
+		Where("article_tags.tag_id IN ? AND articles.status = ?", tagIDs, 1).
+		Group("articles.id")
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.Order("articles.published_at DESC").Offset(offset).Limit(limit).Find(&articles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return articles, total, nil
+}

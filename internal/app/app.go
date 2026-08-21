@@ -16,6 +16,7 @@ import (
 	"blog/internal/stream"
 	"blog/pkg/config"
 	"blog/pkg/database"
+	"blog/pkg/email"
 	"blog/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -139,19 +140,24 @@ func (a *App) initDependencies() {
 	authorRepo := repository.NewAuthorRepository(a.mysqlDB)
 	categoryRepo := repository.NewCategoryRepository(a.mysqlDB)
 	tagRepo := repository.NewTagRepository(a.mysqlDB)
+	authRepo := repository.NewAuthRepository(a.mysqlDB)
 	redisRepo := repository.NewRedisRepository(a.redis)
+
+	// ========== 创建邮件发送器 ==========
+	emailSender := email.NewSender(&a.cfg.Email)
 
 	// ========== 创建 Service ==========
 	articleSvc := service.NewArticleService(articleRepo, redisRepo)
 	authorSvc := service.NewAuthorService(authorRepo)
-	categorySvc := service.NewCategoryService(categoryRepo)
-	tagSvc := service.NewTagService(tagRepo)
+	categorySvc := service.NewCategoryService(categoryRepo, articleRepo)
+	tagSvc := service.NewTagService(tagRepo, articleRepo)
+	authSvc := service.NewAuthService(authRepo, redisRepo, emailSender)
 
 	// ========== 创建 Stream 消费者 ==========
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
 
 	// ========== 创建 Router ==========
-	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc)
 }
 
 // initRouter 初始化路由

@@ -1,19 +1,22 @@
 package service
 
 import (
+	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
 	"blog/internal/repository"
 	"blog/pkg/errors"
+	"blog/pkg/response"
 )
 
 // tagService 标签服务实现
 type tagService struct {
-	repo repository.TagRepository
+	repo        repository.TagRepository
+	articleRepo repository.ArticleRepository
 }
 
 // NewTagService 创建标签服务
-func NewTagService(repo repository.TagRepository) TagService {
-	return &tagService{repo: repo}
+func NewTagService(repo repository.TagRepository, articleRepo repository.ArticleRepository) TagService {
+	return &tagService{repo: repo, articleRepo: articleRepo}
 }
 
 // ListTags 获取标签列表
@@ -37,4 +40,40 @@ func (s *tagService) ListTags() ([]dto.TagDTO, error) {
 	}
 
 	return list, nil
+}
+
+// ListTagArticles 获取标签下的文章列表
+func (s *tagService) ListTagArticles(tagIDs []uint, req request.ArticleListRequest) (*response.PageResponse, error) {
+	offset := (req.Page - 1) * req.Size
+
+	articles, total, err := s.repo.ListByTagIDs(tagIDs, offset, req.Size)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "查询标签文章失败")
+	}
+
+	// 查询标签
+	articleIDs := make([]uint, 0, len(articles))
+	for _, a := range articles {
+		articleIDs = append(articleIDs, a.ID)
+	}
+	tagMap, err := s.articleRepo.GetArticleTagNames(articleIDs)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "查询文章标签失败")
+	}
+
+	// 组装 DTO
+	list := make([]dto.ArticleListItem, 0, len(articles))
+	for _, a := range articles {
+		list = append(list, dto.ArticleListItem{
+			ID:          a.ID,
+			Title:       a.Title,
+			Summary:     a.Summary,
+			Cover:       a.Cover,
+			Tags:        nonNilTags(tagMap[a.ID]),
+			ViewCount:   a.ViewCount,
+			PublishedAt: a.PublishedAt,
+		})
+	}
+
+	return response.NewPageResponse(list, total, req.Page, req.Size), nil
 }

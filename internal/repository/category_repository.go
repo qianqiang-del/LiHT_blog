@@ -30,3 +30,20 @@ func (r *categoryRepository) CountArticles(categoryID uint) (int64, error) {
 		Count(&count).Error
 	return count, err
 }
+
+// ListByCategoryID 查询分类下的已发布文章（分页）
+func (r *categoryRepository) ListByCategoryID(categoryID uint, offset, limit int) ([]entity.Article, int64, error) {
+	var articles []entity.Article
+	var total int64
+
+	query := r.db.Model(&entity.Article{}).Where("category_id = ? AND status = ?", categoryID, 1)
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.Order("published_at DESC").Offset(offset).Limit(limit).Find(&articles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return articles, total, nil
+}
