@@ -12,3 +12,11 @@ type RegisterRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 	Code     string `json:"code" binding:"required,len=6"`
 }
+
+// LoginRequest 登录请求
+type LoginRequest struct {
+	Account     string `json:"account" binding:"required"` // 用户名或邮箱
+	Password    string `json:"password" binding:"required"`
+	CaptchaID   string `json:"captcha_id" binding:"required"`
+	CaptchaCode string `json:"captcha_code" binding:"required"`
+}

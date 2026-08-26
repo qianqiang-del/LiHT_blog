@@ -34,6 +34,15 @@ func (r *authRepository) FindByEmail(email string) (*entity.User, error) {
 	return &user, nil
 }
 
+// FindByAccount 根据用户名或邮箱查找用户
+func (r *authRepository) FindByAccount(account string) (*entity.User, error) {
+	var user entity.User
+	if err := r.db.Where("username = ? OR email = ?", account, account).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // CreateUser 创建用户
 func (r *authRepository) CreateUser(user *entity.User) error {
 	return r.db.Create(user).Error

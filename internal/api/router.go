@@ -7,6 +7,7 @@ import (
 	"blog/internal/api/v1/category"
 	"blog/internal/api/v1/tag"
 	"blog/internal/middleware"
+	"blog/internal/repository"
 	"blog/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -39,7 +40,7 @@ func NewRouter(
 }
 
 // Setup 设置路由
-func (r *Router) Setup(engine *gin.Engine) {
+func (r *Router) Setup(engine *gin.Engine, redis repository.RedisRepository) {
 	// 全局中间件
 	engine.Use(middleware.Recovery())
 	engine.Use(middleware.Logger())

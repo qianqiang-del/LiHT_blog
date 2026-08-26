@@ -4,6 +4,7 @@ import (
 	"blog/internal/model/dto/request"
 	"blog/internal/service"
 	"blog/pkg/response"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,4 +49,50 @@ func (ctrl *Controller) register(c *gin.Context) {
 	}
 
 	response.SuccessWithMessage(c, "注册成功", nil)
+}
+
+// login POST /api/v1/auth/login
+func (ctrl *Controller) login(c *gin.Context) {
+	var req request.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误")
+		return
+	}
+
+	result, err := ctrl.svc.Login(req)
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// getCaptcha GET /api/v1/auth/captcha
+func (ctrl *Controller) getCaptcha(c *gin.Context) {
+	result, err := ctrl.svc.GenerateCaptcha()
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// logout POST /api/v1/auth/logout
+func (ctrl *Controller) logout(c *gin.Context) {
+	// 从 Header 取 token
+	authHeader := c.GetHeader("Authorization")
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		response.BadRequest(c, "令牌格式错误")
+		return
+	}
+
+	if err := ctrl.svc.Logout(parts[1]); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.SuccessWithMessage(c, "退出成功", nil)
 }

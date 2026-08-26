@@ -171,7 +171,7 @@ func (a *App) initServer() {
 	engine := gin.New()
 
 	// 注册路由
-	a.router.Setup(engine)
+	a.router.Setup(engine, repository.NewRedisRepository(a.redis))
 
 	// 创建 HTTP 服务器
 	a.server = &http.Server{
