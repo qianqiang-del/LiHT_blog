@@ -40,7 +40,7 @@ func NewRouter(
 }
 
 // Setup 设置路由
-func (r *Router) Setup(engine *gin.Engine, redis repository.RedisRepository) {
+func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository) {
 	// 全局中间件
 	engine.Use(middleware.Recovery())
 	engine.Use(middleware.Logger())
@@ -57,7 +57,7 @@ func (r *Router) Setup(engine *gin.Engine, redis repository.RedisRepository) {
 	// API 路由组
 	apiGroup := engine.Group("/api/v1")
 	{
-		r.articleCtrl.RegisterRoutes(apiGroup)
+		r.articleCtrl.RegisterRoutes(apiGroup, authRepo)
 		r.authorCtrl.RegisterRoutes(apiGroup)
 		r.categoryCtrl.RegisterRoutes(apiGroup)
 		r.tagCtrl.RegisterRoutes(apiGroup)

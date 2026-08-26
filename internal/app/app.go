@@ -136,22 +136,22 @@ func (a *App) initDatabase() error {
 // initDependencies 初始化依赖注入
 func (a *App) initDependencies() {
 	// ========== 创建 Repository ==========
+	redisRepo := repository.NewRedisRepository(a.redis)
 	articleRepo := repository.NewArticleRepository(a.mysqlDB)
 	authorRepo := repository.NewAuthorRepository(a.mysqlDB)
 	categoryRepo := repository.NewCategoryRepository(a.mysqlDB)
 	tagRepo := repository.NewTagRepository(a.mysqlDB)
-	authRepo := repository.NewAuthRepository(a.mysqlDB)
-	redisRepo := repository.NewRedisRepository(a.redis)
+	authRepo := repository.NewAuthRepository(a.mysqlDB, redisRepo)
 
 	// ========== 创建邮件发送器 ==========
 	emailSender := email.NewSender(&a.cfg.Email)
 
 	// ========== 创建 Service ==========
-	articleSvc := service.NewArticleService(articleRepo, redisRepo)
+	articleSvc := service.NewArticleService(articleRepo, redisRepo, a.mysqlDB)
 	authorSvc := service.NewAuthorService(authorRepo)
 	categorySvc := service.NewCategoryService(categoryRepo, articleRepo)
 	tagSvc := service.NewTagService(tagRepo, articleRepo)
-	authSvc := service.NewAuthService(authRepo, redisRepo, emailSender)
+	authSvc := service.NewAuthService(authRepo, emailSender)
 
 	// ========== 创建 Stream 消费者 ==========
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
@@ -171,7 +171,9 @@ func (a *App) initServer() {
 	engine := gin.New()
 
 	// 注册路由
-	a.router.Setup(engine, repository.NewRedisRepository(a.redis))
+	redisRepo := repository.NewRedisRepository(a.redis)
+	authRepo := repository.NewAuthRepository(a.mysqlDB, redisRepo)
+	a.router.Setup(engine, authRepo)
 
 	// 创建 HTTP 服务器
 	a.server = &http.Server{

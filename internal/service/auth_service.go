@@ -1,13 +1,10 @@
 package service
 
 import (
-	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
 	"time"
-
-	"strings"
 
 	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
@@ -22,32 +19,21 @@ import (
 )
 
 const (
-	codePrefix      = "register:code:"   // 邮箱验证码 Redis key 前缀
-	codeTTL         = 1 * time.Minute    // 邮箱验证码有效期
-	codeLength      = 6                  // 邮箱验证码长度
-	captchaPrefix   = "captcha:"         // 图形验证码 Redis key 前缀
-	captchaTTL      = 5 * time.Minute    // 图形验证码有效期
-	blacklistPrefix = "token:blacklist:" // token 黑名单 Redis key 前缀
+	codeTTL    = 1 * time.Minute // 邮箱验证码有效期
+	codeLength = 6               // 邮箱验证码长度
 )
 
 // authService 认证服务实现
 type authService struct {
-	authRepo  repository.AuthRepository
-	redisRepo repository.RedisRepository
-	email     *email.Sender
-}
-
-// captchaStore 实现 base64Captcha.Store 接口，直接操作 Redis
-type captchaStore struct {
-	redis repository.RedisRepository
+	authRepo repository.AuthRepository
+	email    *email.Sender
 }
 
 // NewAuthService 创建认证服务
-func NewAuthService(authRepo repository.AuthRepository, redisRepo repository.RedisRepository, email *email.Sender) AuthService {
+func NewAuthService(authRepo repository.AuthRepository, email *email.Sender) AuthService {
 	return &authService{
-		authRepo:  authRepo,
-		redisRepo: redisRepo,
-		email:     email,
+		authRepo: authRepo,
+		email:    email,
 	}
 }
 
@@ -66,8 +52,7 @@ func (s *authService) SendCode(req request.SendCodeRequest) error {
 	}
 
 	// 存储到 Redis
-	key := codePrefix + req.Email
-	if err := s.redisRepo.Set(context.Background(), key, code, codeTTL); err != nil {
+	if err := s.authRepo.SaveEmailCode(req.Email, code, codeTTL); err != nil {
 		return errors.New(errors.CodeInternalError, "存储验证码失败")
 	}
 
@@ -82,9 +67,8 @@ func (s *authService) SendCode(req request.SendCodeRequest) error {
 
 // GenerateCaptcha 生成图形验证码
 func (s *authService) GenerateCaptcha() (*dto.CaptchaResponse, error) {
-	store := &captchaStore{redis: s.redisRepo}
 	driver := base64Captcha.NewDriverDigit(80, 240, 4, 0.7, 80)
-	c := base64Captcha.NewCaptcha(driver, store)
+	c := base64Captcha.NewCaptcha(driver, s.authRepo)
 	id, b64s, _, err := c.Generate()
 	if err != nil {
 		return nil, errors.New(errors.CodeInternalError, "生成验证码失败")
@@ -95,10 +79,9 @@ func (s *authService) GenerateCaptcha() (*dto.CaptchaResponse, error) {
 	}, nil
 }
 
-// VerifyCaptcha 校验图形验证码
-func (s *authService) VerifyCaptcha(captchaID, captchaCode string) error {
-	store := &captchaStore{redis: s.redisRepo}
-	if !store.Verify(captchaID, captchaCode, true) {
+// verifyCaptcha 校验图形验证码
+func (s *authService) verifyCaptcha(captchaID, captchaCode string) error {
+	if !s.authRepo.Verify(captchaID, captchaCode, true) {
 		return errors.New(errors.CodeInvalidParam, "验证码错误")
 	}
 	return nil
@@ -107,7 +90,7 @@ func (s *authService) VerifyCaptcha(captchaID, captchaCode string) error {
 // Login 用户登录
 func (s *authService) Login(req request.LoginRequest) (*dto.LoginResponse, error) {
 	// 0. 校验图形验证码
-	if err := s.VerifyCaptcha(req.CaptchaID, req.CaptchaCode); err != nil {
+	if err := s.verifyCaptcha(req.CaptchaID, req.CaptchaCode); err != nil {
 		return nil, err
 	}
 
@@ -160,16 +143,14 @@ func (s *authService) Logout(token string) error {
 	}
 
 	// 存入黑名单
-	key := blacklistPrefix + token
-	return s.redisRepo.Set(context.Background(), key, "1", ttl)
+	return s.authRepo.AddTokenBlacklist(token, ttl)
 }
 
 // Register 用户注册
 func (s *authService) Register(req request.RegisterRequest) error {
 	// 验证码校验
-	key := codePrefix + req.Email
-	var storedCode string
-	if err := s.redisRepo.Get(context.Background(), key, &storedCode); err != nil {
+	storedCode, err := s.authRepo.GetEmailCode(req.Email)
+	if err != nil {
 		return errors.New(errors.CodeInvalidParam, "验证码已过期或无效")
 	}
 	if storedCode != req.Code {
@@ -177,7 +158,7 @@ func (s *authService) Register(req request.RegisterRequest) error {
 	}
 
 	// 检查用户名是否已存在
-	_, err := s.authRepo.FindByUsername(req.Username)
+	_, err = s.authRepo.FindByUsername(req.Username)
 	if err == nil {
 		return errors.New(errors.CodeConflict, "用户名已存在")
 	}
@@ -206,7 +187,7 @@ func (s *authService) Register(req request.RegisterRequest) error {
 	}
 
 	// 删除已使用的验证码
-	_ = s.redisRepo.Del(context.Background(), key)
+	_ = s.authRepo.DeleteEmailCode(req.Email)
 
 	return nil
 }
@@ -226,34 +207,10 @@ func generateCode() (string, error) {
 
 // hashPassword 密码加密
 func hashPassword(password string) (string, error) {
-	// 使用 bcrypt 加密
 	bytes := []byte(password)
 	hash, err := bcrypt.GenerateFromPassword(bytes, bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
 	return string(hash), nil
-}
-
-func (cs *captchaStore) Set(id string, value string) error {
-	return cs.redis.Set(context.Background(), captchaPrefix+id, value, captchaTTL)
-}
-
-func (cs *captchaStore) Get(id string, clear bool) string {
-	var code string
-	if err := cs.redis.Get(context.Background(), captchaPrefix+id, &code); err != nil {
-		return ""
-	}
-	if clear {
-		_ = cs.redis.Del(context.Background(), captchaPrefix+id)
-	}
-	return code
-}
-
-func (cs *captchaStore) Verify(id, answer string, clear bool) bool {
-	code := cs.Get(id, clear)
-	if code == "" {
-		return false
-	}
-	return strings.EqualFold(code, answer)
 }

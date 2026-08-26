@@ -17,6 +17,4 @@ type AuthService interface {
 	Logout(token string) error
 	// GenerateCaptcha 生成图形验证码
 	GenerateCaptcha() (*dto.CaptchaResponse, error)
-	// VerifyCaptcha 校验图形验证码
-	VerifyCaptcha(captchaID, captchaCode string) error
 }

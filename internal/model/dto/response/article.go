@@ -36,3 +36,9 @@ type ArticleDetail struct {
 	PublishedAt  *time.Time   `json:"published_at"`
 	Liked        bool         `json:"liked"`
 }
+
+// LikeResponse 点赞操作响应
+type LikeResponse struct {
+	Liked     bool `json:"liked"`
+	LikeCount int  `json:"like_count"`
+}

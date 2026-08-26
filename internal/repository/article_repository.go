@@ -109,3 +109,46 @@ func (r *articleRepository) GetArticleTags(articleID uint) ([]entity.Tag, error)
 		Find(&tags).Error
 	return tags, err
 }
+
+// HasLiked 查询用户是否已点赞某文章
+func (r *articleRepository) HasLiked(db *gorm.DB, articleID, userID uint) (bool, error) {
+	var count int64
+	err := db.Model(&entity.ArticleLike{}).Where("article_id = ? AND user_id = ?", articleID, userID).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// CreateLike 创建点赞记录
+func (r *articleRepository) CreateLike(db *gorm.DB, articleID, userID uint) error {
+	return db.Create(&entity.ArticleLike{
+		ArticleID: articleID,
+		UserID:    userID,
+	}).Error
+}
+
+// DeleteLike 删除点赞记录
+func (r *articleRepository) DeleteLike(db *gorm.DB, articleID, userID uint) error {
+	return db.Where("article_id = ? AND user_id = ?", articleID, userID).
+		Delete(&entity.ArticleLike{}).Error
+}
+
+// IncrementLikeCount 点赞数 +1
+func (r *articleRepository) IncrementLikeCount(db *gorm.DB, articleID uint) error {
+	return db.Model(&entity.Article{}).Where("id = ?", articleID).
+		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
+}
+
+// DecrementLikeCount 点赞数 -1
+func (r *articleRepository) DecrementLikeCount(db *gorm.DB, articleID uint) error {
+	return db.Model(&entity.Article{}).Where("id = ?", articleID).
+		UpdateColumn("like_count", gorm.Expr("like_count - 1")).Error
+}
+
+// GetLikeCount 获取最新点赞数
+func (r *articleRepository) GetLikeCount(db *gorm.DB, articleID uint) (int, error) {
+	var article entity.Article
+	if err := db.Select("like_count").Where("id = ?", articleID).First(&article).Error; err != nil {
+		return 0, err
+	}
+	return article.LikeCount, nil
+}

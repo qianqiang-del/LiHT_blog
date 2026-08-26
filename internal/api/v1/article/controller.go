@@ -1,6 +1,7 @@
 package article
 
 import (
+	"blog/internal/middleware"
 	"blog/internal/model/dto/request"
 	"blog/internal/service"
 	"blog/pkg/errors"
@@ -60,12 +61,41 @@ func (ctrl *Controller) getArticleDetail(c *gin.Context) {
 		return
 	}
 
-	result, err := ctrl.svc.GetArticleDetail(uint(id))
+	// OptionalAuth：未登录 userID 为 0，登录了有值
+	var userID *uint
+	if uid := middleware.GetUserID(c); uid > 0 {
+		userID = &uid
+	}
+
+	result, err := ctrl.svc.GetArticleDetail(uint(id), userID)
 	if err != nil {
 		if bizErr, ok := err.(*errors.BizError); ok && bizErr.Code == errors.CodeResourceNotFound {
 			response.NotFound(c, bizErr.Message)
 			return
 		}
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// likeArticle POST /api/v1/articles/:id/like
+func (ctrl *Controller) likeArticle(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的文章 ID")
+		return
+	}
+
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	result, err := ctrl.svc.LikeArticle(uint(id), userID)
+	if err != nil {
 		response.BizError(c, err)
 		return
 	}

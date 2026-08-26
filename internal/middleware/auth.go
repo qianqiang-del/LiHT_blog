@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"strings"
 
 	"blog/internal/repository"
@@ -16,12 +15,10 @@ const (
 	ContextUserID = "user_id"
 	// ContextUsername 用户名 上下文键
 	ContextUsername = "username"
-
-	blacklistPrefix = "token:blacklist:" // token 黑名单 Redis key 前缀
 )
 
 // Auth JWT 认证中间件
-func Auth(redis repository.RedisRepository) gin.HandlerFunc {
+func Auth(authRepo repository.AuthRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从 Header 获取 Authorization
 		authHeader := c.GetHeader("Authorization")
@@ -42,8 +39,8 @@ func Auth(redis repository.RedisRepository) gin.HandlerFunc {
 		token := parts[1]
 
 		// 检查 token 是否在黑名单中
-		if redis != nil {
-			exists, _ := redis.Exists(context.Background(), blacklistPrefix+token)
+		if authRepo != nil {
+			exists, _ := authRepo.IsTokenBlacklisted(token)
 			if exists {
 				response.Unauthorized(c, "token 已失效")
 				c.Abort()
@@ -84,7 +81,7 @@ func GetUsername(c *gin.Context) string {
 }
 
 // OptionalAuth 可选的 JWT 认证中间件
-func OptionalAuth(redis repository.RedisRepository) gin.HandlerFunc {
+func OptionalAuth(authRepo repository.AuthRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -101,8 +98,8 @@ func OptionalAuth(redis repository.RedisRepository) gin.HandlerFunc {
 		token := parts[1]
 
 		// 检查 token 是否在黑名单中
-		if redis != nil {
-			exists, _ := redis.Exists(context.Background(), blacklistPrefix+token)
+		if authRepo != nil {
+			exists, _ := authRepo.IsTokenBlacklisted(token)
 			if exists {
 				c.Next()
 				return

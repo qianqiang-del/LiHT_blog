@@ -9,17 +9,20 @@ import (
 	"blog/pkg/response"
 	"context"
 	"fmt"
+
+	"gorm.io/gorm"
 )
 
 // service 文章服务实现
 type service struct {
 	repo      repository.ArticleRepository
 	redisRepo repository.RedisRepository
+	db        *gorm.DB
 }
 
 // NewArticleService 创建文章服务
-func NewArticleService(repo repository.ArticleRepository, redisRepo repository.RedisRepository) ArticleService {
-	return &service{repo: repo, redisRepo: redisRepo}
+func NewArticleService(repo repository.ArticleRepository, redisRepo repository.RedisRepository, db *gorm.DB) ArticleService {
+	return &service{repo: repo, redisRepo: redisRepo, db: db}
 }
 
 // ListArticles 获取文章列表
@@ -85,7 +88,7 @@ func (s *service) ListHotArticles(req request.ArticleListRequest) (*response.Pag
 }
 
 // GetArticleDetail 获取文章详情
-func (s *service) GetArticleDetail(id uint) (*dto.ArticleDetail, error) {
+func (s *service) GetArticleDetail(id uint, userID *uint) (*dto.ArticleDetail, error) {
 	article, err := s.repo.GetArticleByID(id)
 	if err != nil {
 		return nil, errors.New(errors.CodeResourceNotFound, "文章不存在")
@@ -101,6 +104,12 @@ func (s *service) GetArticleDetail(id uint) (*dto.ArticleDetail, error) {
 	_ = s.redisRepo.XAdd(context.Background(), stream.StreamKey, map[string]interface{}{
 		"id": fmt.Sprintf("%d", id),
 	})
+
+	// 查询点赞状态
+	liked := false
+	if userID != nil {
+		liked, _ = s.repo.HasLiked(s.db, id, *userID)
+	}
 
 	// 组装标签 DTO
 	tagDTOs := make([]dto.TagDTO, 0, len(tags))
@@ -121,12 +130,60 @@ func (s *service) GetArticleDetail(id uint) (*dto.ArticleDetail, error) {
 		Cover:        article.Cover,
 		Category:     categoryDTO,
 		Tags:         tagDTOs,
-		ViewCount:    article.ViewCount + 1, // 返回时包含本次浏览
+		ViewCount:    article.ViewCount + 1,
 		LikeCount:    article.LikeCount,
 		CommentCount: article.CommentCount,
 		PublishedAt:  article.PublishedAt,
-		Liked:        false, // 默认未点赞
+		Liked:        liked,
 	}, nil
+}
+
+// LikeArticle 切换点赞状态
+func (s *service) LikeArticle(articleID, userID uint) (*dto.LikeResponse, error) {
+	var liked bool
+	var likeCount int
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 查当前状态
+		exists, err := s.repo.HasLiked(tx, articleID, userID)
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			// 已点赞 → 取消
+			if err := s.repo.DeleteLike(tx, articleID, userID); err != nil {
+				return err
+			}
+			if err := s.repo.DecrementLikeCount(tx, articleID); err != nil {
+				return err
+			}
+			liked = false
+		} else {
+			// 未点赞 → 点赞
+			if err := s.repo.CreateLike(tx, articleID, userID); err != nil {
+				return err
+			}
+			if err := s.repo.IncrementLikeCount(tx, articleID); err != nil {
+				return err
+			}
+			liked = true
+		}
+
+		// 查最新点赞数
+		count, err := s.repo.GetLikeCount(tx, articleID)
+		if err != nil {
+			return err
+		}
+		likeCount = count
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "操作失败")
+	}
+
+	return &dto.LikeResponse{Liked: liked, LikeCount: likeCount}, nil
 }
 
 // nonNilTags 保证空标签返回 [] 而不是 null
