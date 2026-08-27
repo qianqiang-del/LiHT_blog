@@ -142,6 +142,7 @@ func (a *App) initDependencies() {
 	categoryRepo := repository.NewCategoryRepository(a.mysqlDB)
 	tagRepo := repository.NewTagRepository(a.mysqlDB)
 	authRepo := repository.NewAuthRepository(a.mysqlDB, redisRepo)
+	commentRepo := repository.NewCommentRepository(a.mysqlDB)
 
 	// ========== 创建邮件发送器 ==========
 	emailSender := email.NewSender(&a.cfg.Email)
@@ -152,12 +153,13 @@ func (a *App) initDependencies() {
 	categorySvc := service.NewCategoryService(categoryRepo, articleRepo)
 	tagSvc := service.NewTagService(tagRepo, articleRepo)
 	authSvc := service.NewAuthService(authRepo, emailSender)
+	commentSvc := service.NewCommentService(commentRepo, a.mysqlDB)
 
 	// ========== 创建 Stream 消费者 ==========
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
 
 	// ========== 创建 Router ==========
-	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc)
 }
 
 // initRouter 初始化路由

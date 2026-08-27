@@ -26,6 +26,15 @@ func NewAuthRepository(db *gorm.DB, redis RedisRepository) AuthRepository {
 	return &authRepository{db: db, redis: redis}
 }
 
+// FindByID 根据 ID 查找用户
+func (r *authRepository) FindByID(id uint) (*entity.User, error) {
+	var user entity.User
+	if err := r.db.First(&user, id).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // FindByUsername 根据用户名查找用户
 func (r *authRepository) FindByUsername(username string) (*entity.User, error) {
 	var user entity.User

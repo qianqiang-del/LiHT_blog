@@ -214,3 +214,16 @@ func hashPassword(password string) (string, error) {
 	}
 	return string(hash), nil
 }
+
+// GetUserInfo 获取用户信息
+func (s *authService) GetUserInfo(userID uint) (*dto.UserInfo, error) {
+	user, err := s.authRepo.FindByID(userID)
+	if err != nil {
+		return nil, errors.New(errors.CodeNotFound, "用户不存在")
+	}
+	return &dto.UserInfo{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+	}, nil
+}

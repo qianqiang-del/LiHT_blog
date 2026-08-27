@@ -7,6 +7,8 @@ import (
 
 // AuthRepository 认证仓储接口
 type AuthRepository interface {
+	// FindByID 根据 ID 查询用户
+	FindByID(id uint) (*entity.User, error)
 	// FindByUsername 用户操作
 	FindByUsername(username string) (*entity.User, error)
 	FindByEmail(email string) (*entity.User, error)

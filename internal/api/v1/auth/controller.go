@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"blog/internal/middleware"
 	"blog/internal/model/dto/request"
 	"blog/internal/service"
 	"blog/pkg/response"
@@ -77,6 +78,23 @@ func (ctrl *Controller) getCaptcha(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+// me GET /api/v1/auth/me
+func (ctrl *Controller) me(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	user, err := ctrl.svc.GetUserInfo(userID)
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, user)
 }
 
 // logout POST /api/v1/auth/logout

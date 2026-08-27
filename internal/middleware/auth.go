@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"blog/internal/repository"
+	"blog/pkg/errors"
 	"blog/pkg/jwt"
 	"blog/pkg/response"
 
@@ -51,7 +52,11 @@ func Auth(authRepo repository.AuthRepository) gin.HandlerFunc {
 		// 解析 Token
 		claims, err := jwt.ParseToken(token)
 		if err != nil {
-			response.Unauthorized(c, err.Error())
+			if err == jwt.ErrTokenExpired {
+				response.Error(c, errors.CodeTokenExpired, err.Error())
+			} else {
+				response.Error(c, errors.CodeInvalidToken, err.Error())
+			}
 			c.Abort()
 			return
 		}

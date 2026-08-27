@@ -17,4 +17,6 @@ type AuthService interface {
 	Logout(token string) error
 	// GenerateCaptcha 生成图形验证码
 	GenerateCaptcha() (*dto.CaptchaResponse, error)
+	// GetUserInfo 获取用户信息
+	GetUserInfo(userID uint) (*dto.UserInfo, error)
 }
