@@ -14,6 +14,7 @@ import (
 	"blog/internal/repository"
 	"blog/internal/service"
 	"blog/internal/stream"
+	"blog/internal/task"
 	"blog/pkg/config"
 	"blog/pkg/database"
 	"blog/pkg/email"
@@ -26,12 +27,13 @@ import (
 
 // App 应用结构体
 type App struct {
-	cfg      *config.Config
-	mysqlDB  *gorm.DB
-	redis    *redis.Client
-	router   *api.Router
-	server   *http.Server
-	consumer *stream.Consumer
+	cfg        *config.Config
+	mysqlDB    *gorm.DB
+	redis      *redis.Client
+	router     *api.Router
+	server     *http.Server
+	consumer   *stream.Consumer
+	heatTicker *time.Ticker
 }
 
 // NewApp 创建应用实例
@@ -192,6 +194,9 @@ func (a *App) Run() {
 	// 启动 Stream 消费者
 	a.consumer.Start()
 
+	// 启动热度计算定时任务
+	a.heatTicker = task.StartHeatJob(a.mysqlDB)
+
 	// 启动 HTTP 服务器
 	go func() {
 		logger.Info("HTTP 服务器启动",
@@ -228,6 +233,11 @@ func (a *App) gracefulShutdown() {
 		if err := a.router.Close(); err != nil {
 			logger.Error("关闭路由连接失败", zap.Error(err))
 		}
+	}
+
+	// 停止热度计算定时任务
+	if a.heatTicker != nil {
+		a.heatTicker.Stop()
 	}
 
 	// 停止 Stream 消费者
