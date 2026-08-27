@@ -4,6 +4,7 @@ import (
 	"blog/internal/model/entity"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // commentRepository 评论仓储实现
@@ -103,28 +104,33 @@ func (r *commentRepository) HasLiked(db *gorm.DB, commentID, userID uint) (bool,
 	return count > 0, err
 }
 
-// CreateLike 创建评论点赞记录
+// CreateLike 创建评论点赞记录；仅实际插入成功才同步 like_count +1（并发重复点赞不重复计数）
 func (r *commentRepository) CreateLike(db *gorm.DB, commentID, userID uint) error {
-	return db.Create(&entity.CommentLike{CommentID: commentID, UserID: userID}).Error
-}
-
-// DeleteLike 删除评论点赞记录
-func (r *commentRepository) DeleteLike(db *gorm.DB, commentID, userID uint) error {
-	return db.Where("comment_id = ? AND user_id = ?", commentID, userID).
-		Delete(&entity.CommentLike{}).Error
-}
-
-// IncrementLikeCount 评论点赞数 +1
-func (r *commentRepository) IncrementLikeCount(db *gorm.DB, commentID uint) error {
-	return db.Model(&entity.Comment{}).
-		Where("id = ?", commentID).
+	res := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&entity.CommentLike{
+		CommentID: commentID,
+		UserID:    userID,
+	})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil // 已点赞过，不重复计数
+	}
+	return db.Model(&entity.Comment{}).Where("id = ?", commentID).
 		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
 }
 
-// DecrementLikeCount 评论点赞数 -1
-func (r *commentRepository) DecrementLikeCount(db *gorm.DB, commentID uint) error {
-	return db.Model(&entity.Comment{}).
-		Where("id = ?", commentID).
+// DeleteLike 删除评论点赞记录；仅实际删除成功才同步 like_count -1（并发重复取消不重复扣减）
+func (r *commentRepository) DeleteLike(db *gorm.DB, commentID, userID uint) error {
+	res := db.Where("comment_id = ? AND user_id = ?", commentID, userID).
+		Delete(&entity.CommentLike{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil // 未点赞过，不重复扣减
+	}
+	return db.Model(&entity.Comment{}).Where("id = ?", commentID).
 		UpdateColumn("like_count", gorm.Expr("like_count - 1")).Error
 }
 

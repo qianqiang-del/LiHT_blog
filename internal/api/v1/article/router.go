@@ -10,6 +10,7 @@ import (
 // RegisterRoutes 注册文章相关路由
 func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup, authRepo repository.AuthRepository) {
 	r.GET("/articles", ctrl.listArticles)
+	r.GET("/articles/search", ctrl.searchArticles)
 	r.GET("/hot", ctrl.listHotArticles)
 	r.GET("/articles/:id", middleware.OptionalAuth(authRepo), ctrl.getArticleDetail)
 

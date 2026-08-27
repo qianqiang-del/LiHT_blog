@@ -4,6 +4,7 @@ import (
 	"blog/internal/model/entity"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // articleRepository 文章仓储实现
@@ -31,6 +32,29 @@ func (r *articleRepository) ListPublished(offset, limit int) ([]entity.Article, 
 	// 查询列表（按发布时间倒序）
 	if err := r.db.
 		Where("status = ?", 1).
+		Order("published_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&articles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return articles, total, nil
+}
+
+// SearchByKeyword 全文搜索文章（标题、描述、正文）
+func (r *articleRepository) SearchByKeyword(keyword string, offset, limit int) ([]entity.Article, int64, error) {
+	var articles []entity.Article
+	var total int64
+
+	query := r.db.Model(&entity.Article{}).
+		Where("status = ? AND MATCH(title, summary, content) AGAINST(? IN BOOLEAN MODE)", 1, keyword)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := query.
 		Order("published_at DESC").
 		Offset(offset).
 		Limit(limit).
@@ -118,28 +142,32 @@ func (r *articleRepository) HasLiked(db *gorm.DB, articleID, userID uint) (bool,
 	return count > 0, err
 }
 
-// CreateLike 创建点赞记录
+// CreateLike 创建点赞记录；仅实际插入成功才同步 like_count +1（并发重复点赞不重复计数）
 func (r *articleRepository) CreateLike(db *gorm.DB, articleID, userID uint) error {
-	return db.Create(&entity.ArticleLike{
+	res := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&entity.ArticleLike{
 		ArticleID: articleID,
 		UserID:    userID,
-	}).Error
-}
-
-// DeleteLike 删除点赞记录
-func (r *articleRepository) DeleteLike(db *gorm.DB, articleID, userID uint) error {
-	return db.Where("article_id = ? AND user_id = ?", articleID, userID).
-		Delete(&entity.ArticleLike{}).Error
-}
-
-// IncrementLikeCount 点赞数 +1
-func (r *articleRepository) IncrementLikeCount(db *gorm.DB, articleID uint) error {
+	})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil // 已点赞过，不重复计数
+	}
 	return db.Model(&entity.Article{}).Where("id = ?", articleID).
 		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
 }
 
-// DecrementLikeCount 点赞数 -1
-func (r *articleRepository) DecrementLikeCount(db *gorm.DB, articleID uint) error {
+// DeleteLike 删除点赞记录；仅实际删除成功才同步 like_count -1（并发重复取消不重复扣减）
+func (r *articleRepository) DeleteLike(db *gorm.DB, articleID, userID uint) error {
+	res := db.Where("article_id = ? AND user_id = ?", articleID, userID).
+		Delete(&entity.ArticleLike{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil // 未点赞过，不重复扣减
+	}
 	return db.Model(&entity.Article{}).Where("id = ?", articleID).
 		UpdateColumn("like_count", gorm.Expr("like_count - 1")).Error
 }

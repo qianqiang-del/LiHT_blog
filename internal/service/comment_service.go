@@ -148,20 +148,14 @@ func (s *commentService) LikeComment(commentID, userID uint) (*dto.LikeResponse,
 		}
 
 		if exists {
-			// 取消点赞
+			// 取消点赞（DeleteLike 内部已处理 like_count -1）
 			if err := s.repo.DeleteLike(tx, commentID, userID); err != nil {
-				return err
-			}
-			if err := s.repo.DecrementLikeCount(tx, commentID); err != nil {
 				return err
 			}
 			liked = false
 		} else {
-			// 点赞
+			// 点赞（CreateLike 内部已处理 like_count +1）
 			if err := s.repo.CreateLike(tx, commentID, userID); err != nil {
-				return err
-			}
-			if err := s.repo.IncrementLikeCount(tx, commentID); err != nil {
 				return err
 			}
 			liked = true

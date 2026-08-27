@@ -10,6 +10,8 @@ import (
 type ArticleRepository interface {
 	ListPublished(offset, limit int) ([]entity.Article, int64, error)
 	ListHot(offset, limit int) ([]entity.Article, int64, error)
+	// SearchByKeyword 全文搜索文章（标题、描述、正文）
+	SearchByKeyword(keyword string, offset, limit int) ([]entity.Article, int64, error)
 	// GetArticleTagNames 查询多篇文章的标签名称（article_id -> []tag_name）
 	GetArticleTagNames(articleIDs []uint) (map[uint][]string, error)
 	// GetArticleByID 根据 ID 获取文章详情（预加载分类）
@@ -22,10 +24,6 @@ type ArticleRepository interface {
 	CreateLike(db *gorm.DB, articleID, userID uint) error
 	// DeleteLike 删除点赞记录
 	DeleteLike(db *gorm.DB, articleID, userID uint) error
-	// IncrementLikeCount 点赞数 +1
-	IncrementLikeCount(db *gorm.DB, articleID uint) error
-	// DecrementLikeCount 点赞数 -1
-	DecrementLikeCount(db *gorm.DB, articleID uint) error
 	// GetLikeCount 获取最新点赞数
 	GetLikeCount(db *gorm.DB, articleID uint) (int, error)
 }

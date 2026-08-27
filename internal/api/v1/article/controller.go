@@ -53,6 +53,23 @@ func (ctrl *Controller) listHotArticles(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// searchArticles GET /api/v1/articles/search
+func (ctrl *Controller) searchArticles(c *gin.Context) {
+	var req request.ArticleSearchRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(c, "搜索参数错误")
+		return
+	}
+
+	result, err := ctrl.svc.SearchArticles(req)
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
 // getArticleDetail GET /api/v1/articles/:id
 func (ctrl *Controller) getArticleDetail(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)

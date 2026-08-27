@@ -62,6 +62,43 @@ func (s *service) ListArticles(req request.ArticleListRequest) (*response.PageRe
 	return response.NewPageResponse(list, total, req.Page, req.Size), nil
 }
 
+// SearchArticles 全文搜索文章
+func (s *service) SearchArticles(req request.ArticleSearchRequest) (*response.PageResponse, error) {
+	offset := (req.Page - 1) * req.Size
+
+	articles, total, err := s.repo.SearchByKeyword(req.Keyword, offset, req.Size)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "搜索失败")
+	}
+
+	// 一次查完所有文章的标签名称
+	articleIDs := make([]uint, 0, len(articles))
+	for _, a := range articles {
+		articleIDs = append(articleIDs, a.ID)
+	}
+	tagMap, err := s.repo.GetArticleTagNames(articleIDs)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "查询文章标签失败")
+	}
+
+	// 组装 DTO
+	list := make([]dto.ArticleListItem, 0, len(articles))
+	for _, a := range articles {
+		item := dto.ArticleListItem{
+			ID:          a.ID,
+			Title:       a.Title,
+			Summary:     a.Summary,
+			Cover:       a.Cover,
+			ViewCount:   a.ViewCount,
+			PublishedAt: a.PublishedAt,
+			Tags:        nonNilTags(tagMap[a.ID]),
+		}
+		list = append(list, item)
+	}
+
+	return response.NewPageResponse(list, total, req.Page, req.Size), nil
+}
+
 // ListHotArticles 获取热门文章列表
 func (s *service) ListHotArticles(req request.ArticleListRequest) (*response.PageResponse, error) {
 	offset := (req.Page - 1) * req.Size
@@ -151,20 +188,14 @@ func (s *service) LikeArticle(articleID, userID uint) (*dto.LikeResponse, error)
 		}
 
 		if exists {
-			// 已点赞 → 取消
+			// 已点赞 → 取消（DeleteLike 内部已处理 like_count -1）
 			if err := s.repo.DeleteLike(tx, articleID, userID); err != nil {
-				return err
-			}
-			if err := s.repo.DecrementLikeCount(tx, articleID); err != nil {
 				return err
 			}
 			liked = false
 		} else {
-			// 未点赞 → 点赞
+			// 未点赞 → 点赞（CreateLike 内部已处理 like_count +1）
 			if err := s.repo.CreateLike(tx, articleID, userID); err != nil {
-				return err
-			}
-			if err := s.repo.IncrementLikeCount(tx, articleID); err != nil {
 				return err
 			}
 			liked = true

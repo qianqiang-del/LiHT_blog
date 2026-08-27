@@ -22,10 +22,6 @@ type CommentRepository interface {
 	CreateLike(db *gorm.DB, commentID, userID uint) error
 	// DeleteLike 删除评论点赞记录
 	DeleteLike(db *gorm.DB, commentID, userID uint) error
-	// IncrementLikeCount 评论点赞数 +1
-	IncrementLikeCount(db *gorm.DB, commentID uint) error
-	// DecrementLikeCount 评论点赞数 -1
-	DecrementLikeCount(db *gorm.DB, commentID uint) error
 	// GetLikeCount 获取评论最新点赞数
 	GetLikeCount(db *gorm.DB, commentID uint) (int, error)
 }

@@ -10,6 +10,7 @@ import (
 type ArticleService interface {
 	ListArticles(req request.ArticleListRequest) (*response.PageResponse, error)
 	ListHotArticles(req request.ArticleListRequest) (*response.PageResponse, error)
+	SearchArticles(req request.ArticleSearchRequest) (*response.PageResponse, error)
 	GetArticleDetail(id uint, userID *uint) (*dto.ArticleDetail, error)
 	LikeArticle(articleID, userID uint) (*dto.LikeResponse, error)
 }
