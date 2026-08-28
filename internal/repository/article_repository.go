@@ -180,3 +180,15 @@ func (r *articleRepository) GetLikeCount(db *gorm.DB, articleID uint) (int, erro
 	}
 	return article.LikeCount, nil
 }
+
+// IncrementCommentCount 文章评论数 +1
+func (r *articleRepository) IncrementCommentCount(db *gorm.DB, articleID uint) error {
+	return db.Model(&entity.Article{}).Where("id = ?", articleID).
+		Update("comment_count", gorm.Expr("comment_count + 1")).Error
+}
+
+// DecrementCommentCount 文章评论数 -1
+func (r *articleRepository) DecrementCommentCount(db *gorm.DB, articleID uint) error {
+	return db.Model(&entity.Article{}).Where("id = ?", articleID).
+		Update("comment_count", gorm.Expr("comment_count - 1")).Error
+}

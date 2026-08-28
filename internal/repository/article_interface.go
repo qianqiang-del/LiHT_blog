@@ -26,4 +26,8 @@ type ArticleRepository interface {
 	DeleteLike(db *gorm.DB, articleID, userID uint) error
 	// GetLikeCount 获取最新点赞数
 	GetLikeCount(db *gorm.DB, articleID uint) (int, error)
+	// IncrementCommentCount 文章评论数 +1
+	IncrementCommentCount(db *gorm.DB, articleID uint) error
+	// DecrementCommentCount 文章评论数 -1
+	DecrementCommentCount(db *gorm.DB, articleID uint) error
 }

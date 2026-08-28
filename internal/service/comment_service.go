@@ -11,17 +11,24 @@ import (
 
 // commentService 评论服务实现
 type commentService struct {
-	repo repository.CommentRepository
-	db   *gorm.DB
+	repo        repository.CommentRepository
+	articleRepo repository.ArticleRepository
+	db          *gorm.DB
 }
 
 // NewCommentService 创建评论服务
-func NewCommentService(repo repository.CommentRepository, db *gorm.DB) CommentService {
-	return &commentService{repo: repo, db: db}
+func NewCommentService(repo repository.CommentRepository, articleRepo repository.ArticleRepository, db *gorm.DB) CommentService {
+	return &commentService{repo: repo, articleRepo: articleRepo, db: db}
 }
 
 // CreateComment 创建评论
 func (s *commentService) CreateComment(articleID, userID uint, nickname, content string, parentID *uint) (*dto.CommentItem, error) {
+	if len(content) == 0 {
+		return nil, errors.New(errors.CodeBadRequest, "评论内容不能为空")
+	}
+	if len(content) > 200 {
+		return nil, errors.New(errors.CodeBadRequest, "评论内容不能超过200字")
+	}
 	comment := &entity.Comment{
 		ArticleID: articleID,
 		ParentID:  parentID,
@@ -34,6 +41,9 @@ func (s *commentService) CreateComment(articleID, userID uint, nickname, content
 	if err := s.repo.Create(comment); err != nil {
 		return nil, errors.New(errors.CodeInternalError, "创建评论失败")
 	}
+
+	// 更新文章评论数
+	_ = s.articleRepo.IncrementCommentCount(s.db, articleID)
 
 	return &dto.CommentItem{
 		ID:        comment.ID,

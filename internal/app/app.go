@@ -155,7 +155,7 @@ func (a *App) initDependencies() {
 	categorySvc := service.NewCategoryService(categoryRepo, articleRepo)
 	tagSvc := service.NewTagService(tagRepo, articleRepo)
 	authSvc := service.NewAuthService(authRepo, emailSender)
-	commentSvc := service.NewCommentService(commentRepo, a.mysqlDB)
+	commentSvc := service.NewCommentService(commentRepo, articleRepo, a.mysqlDB)
 
 	// ========== 创建 Stream 消费者 ==========
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
