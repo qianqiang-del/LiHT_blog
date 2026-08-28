@@ -86,7 +86,7 @@ func (ctrl *Controller) getArticleDetail(c *gin.Context) {
 
 	result, err := ctrl.svc.GetArticleDetail(uint(id), userID)
 	if err != nil {
-		if bizErr, ok := err.(*errors.BizError); ok && bizErr.Code == errors.CodeResourceNotFound {
+		if bizErr, ok := errors.Is(err, errors.CodeResourceNotFound); ok {
 			response.NotFound(c, bizErr.Message)
 			return
 		}
@@ -118,4 +118,87 @@ func (ctrl *Controller) likeArticle(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+// adminListArticles GET /api/v1/admin/articles
+func (ctrl *Controller) adminListArticles(c *gin.Context) {
+	var req request.AdminArticleListRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(c, "分页参数错误")
+		return
+	}
+	result, err := ctrl.svc.AdminListArticles(req)
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// adminGetArticleDetail GET /api/v1/admin/articles/:id
+func (ctrl *Controller) adminGetArticleDetail(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的文章 ID")
+		return
+	}
+
+	result, err := ctrl.svc.GetArticleDetail(uint(id), nil)
+	if err != nil {
+		if bizErr, ok := errors.Is(err, errors.CodeResourceNotFound); ok {
+			response.NotFound(c, bizErr.Message)
+			return
+		}
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// adminUpdateArticleStatus PATCH /api/v1/admin/articles/:id/status
+func (ctrl *Controller) adminUpdateArticleStatus(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的文章 ID")
+		return
+	}
+
+	var req request.AdminUpdateArticleStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "状态值无效，只能为 正常 或 下架")
+		return
+	}
+
+	// 转换为数据库值：正常=1, 下架=0
+	var status int8
+	if req.Status == "正常" {
+		status = 1
+	} else {
+		status = 0
+	}
+
+	if err := ctrl.svc.AdminUpdateArticleStatus(uint(id), status); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
+}
+
+// adminDeleteArticle DELETE /api/v1/admin/articles/:id
+func (ctrl *Controller) adminDeleteArticle(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的文章 ID")
+		return
+	}
+
+	if err := ctrl.svc.AdminDeleteArticle(uint(id)); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
 }

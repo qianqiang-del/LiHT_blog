@@ -68,6 +68,13 @@ func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository) {
 		r.authCtrl.RegisterRoutes(apiGroup, authRepo)
 		r.commentCtrl.RegisterRoutes(apiGroup, authRepo)
 	}
+
+	// 后台管理路由组
+	adminGroup := engine.Group("/api/v1/admin")
+	{
+		r.articleCtrl.RegisterAdminRoutes(adminGroup)
+		r.categoryCtrl.RegisterAdminRoutes(adminGroup)
+	}
 }
 
 // Close 关闭所有路由连接

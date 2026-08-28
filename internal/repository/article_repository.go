@@ -192,3 +192,64 @@ func (r *articleRepository) DecrementCommentCount(db *gorm.DB, articleID uint) e
 	return db.Model(&entity.Article{}).Where("id = ?", articleID).
 		Update("comment_count", gorm.Expr("comment_count - 1")).Error
 }
+
+// AdminListArticles 后台查询文章列表（支持标题模糊查询和分类筛选）
+func (r *articleRepository) AdminListArticles(title, category string, offset, limit int) ([]entity.Article, int64, error) {
+	var articles []entity.Article
+	var total int64
+
+	query := r.db.Model(&entity.Article{})
+
+	// 标题模糊查询
+	if title != "" {
+		query = query.Where("title LIKE ?", "%"+title+"%")
+	}
+
+	// 分类筛选
+	if category != "" {
+		query = query.Joins("JOIN categories ON categories.id = articles.category_id").
+			Where("categories.name = ?", category)
+	}
+
+	// 统计总数
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 查询列表（预加载分类，按发布时间倒序）
+	if err := query.
+		Preload("Category").
+		Order("published_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&articles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return articles, total, nil
+}
+
+// UpdateStatus 更新文章状态
+func (r *articleRepository) UpdateStatus(id uint, status int8) error {
+	return r.db.Model(&entity.Article{}).Where("id = ?", id).Update("status", status).Error
+}
+
+// HardDelete 硬删除文章（同时删除关联的标签和点赞记录）
+func (r *articleRepository) HardDelete(id uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 删除文章标签关联
+		if err := tx.Where("article_id = ?", id).Delete(&entity.ArticleTag{}).Error; err != nil {
+			return err
+		}
+		// 删除文章点赞记录
+		if err := tx.Where("article_id = ?", id).Delete(&entity.ArticleLike{}).Error; err != nil {
+			return err
+		}
+		// 删除文章评论（软删除）
+		if err := tx.Where("article_id = ?", id).Delete(&entity.Comment{}).Error; err != nil {
+			return err
+		}
+		// 硬删除文章
+		return tx.Unscoped().Delete(&entity.Article{}, id).Error
+	})
+}

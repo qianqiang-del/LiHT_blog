@@ -42,3 +42,18 @@ type LikeResponse struct {
 	Liked     bool `json:"liked"`
 	LikeCount int  `json:"like_count"`
 }
+
+// AdminArticleListItem 后台文章列表项
+type AdminArticleListItem struct {
+	ID           uint       `json:"id"`
+	Title        string     `json:"title"`
+	Cover        string     `json:"cover"`
+	Category     string     `json:"category"`
+	Tags         []string   `json:"tags"`
+	Status       int8       `json:"status"` // 1=正常 0=下架
+	ViewCount    int        `json:"view_count"`
+	LikeCount    int        `json:"like_count"`
+	CommentCount int        `json:"comment_count"`
+	Hot          int        `json:"hot"`
+	PublishedAt  *time.Time `json:"published_at"`
+}

@@ -17,6 +17,14 @@ func (e *BizError) Error() string {
 	return fmt.Sprintf("[%d] %s", e.Code, e.Message)
 }
 
+// Is 判断是否为指定错误码的业务错误
+func Is(err error, code int) (*BizError, bool) {
+	if bizErr, ok := err.(*BizError); ok && bizErr.Code == code {
+		return bizErr, true
+	}
+	return nil, false
+}
+
 // New 创建新的业务错误
 func New(code int, message string) *BizError {
 	return &BizError{

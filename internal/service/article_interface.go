@@ -13,4 +13,7 @@ type ArticleService interface {
 	SearchArticles(req request.ArticleSearchRequest) (*response.PageResponse, error)
 	GetArticleDetail(id uint, userID *uint) (*dto.ArticleDetail, error)
 	LikeArticle(articleID, userID uint) (*dto.LikeResponse, error)
+	AdminListArticles(req request.AdminArticleListRequest) (*response.PageResponse, error)
+	AdminUpdateArticleStatus(id uint, status int8) error
+	AdminDeleteArticle(id uint) error
 }

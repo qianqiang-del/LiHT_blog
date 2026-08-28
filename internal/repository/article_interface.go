@@ -30,4 +30,10 @@ type ArticleRepository interface {
 	IncrementCommentCount(db *gorm.DB, articleID uint) error
 	// DecrementCommentCount 文章评论数 -1
 	DecrementCommentCount(db *gorm.DB, articleID uint) error
+	// AdminListArticles 后台查询文章列表（支持标题模糊查询和分类筛选）
+	AdminListArticles(title, category string, offset, limit int) ([]entity.Article, int64, error)
+	// UpdateStatus 更新文章状态
+	UpdateStatus(id uint, status int8) error
+	// HardDelete 硬删除文章
+	HardDelete(id uint) error
 }

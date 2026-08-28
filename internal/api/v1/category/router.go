@@ -7,3 +7,8 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/categories", ctrl.listCategories)
 	r.GET("/categories/:id/articles", ctrl.listCategoryArticles)
 }
+
+// RegisterAdminRoutes 注册后台分类管理路由
+func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
+	r.GET("/categories", ctrl.listCategories)
+}

@@ -19,3 +19,11 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup, authRepo repository.A
 	authGroup.Use(middleware.Auth(authRepo))
 	authGroup.POST("/:id/like", ctrl.likeArticle)
 }
+
+// RegisterAdminRoutes 注册后台文章管理路由
+func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
+	r.GET("/articles", ctrl.adminListArticles)
+	r.GET("/articles/:id", ctrl.adminGetArticleDetail)
+	r.PUT("/articles/:id/status", ctrl.adminUpdateArticleStatus)
+	r.DELETE("/articles/:id", ctrl.adminDeleteArticle)
+}
