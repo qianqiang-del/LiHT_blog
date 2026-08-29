@@ -10,6 +10,15 @@ type Config struct {
 	Log      LogConfig      `mapstructure:"log"`
 	CORS     CORSConfig     `mapstructure:"cors"`
 	Email    EmailConfig    `mapstructure:"email"`
+	OSS      OSSConfig      `mapstructure:"oss"`
+}
+
+// OSSConfig 阿里云 OSS 配置
+type OSSConfig struct {
+	AccessKeyID     string `mapstructure:"access_key_id"`
+	AccessKeySecret string `mapstructure:"access_key_secret"`
+	Endpoint        string `mapstructure:"endpoint"`
+	Bucket          string `mapstructure:"bucket"`
 }
 
 // EmailConfig 邮件配置

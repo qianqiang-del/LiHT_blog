@@ -253,3 +253,23 @@ func (r *articleRepository) HardDelete(id uint) error {
 		return tx.Unscoped().Delete(&entity.Article{}, id).Error
 	})
 }
+
+// Create 创建文章（含标签关联）
+func (r *articleRepository) Create(article *entity.Article, tagIDs []uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 创建文章
+		if err := tx.Create(article).Error; err != nil {
+			return err
+		}
+		// 创建标签关联
+		for _, tagID := range tagIDs {
+			if err := tx.Create(&entity.ArticleTag{
+				ArticleID: article.ID,
+				TagID:     tagID,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

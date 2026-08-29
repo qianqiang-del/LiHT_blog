@@ -7,3 +7,8 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/tags", ctrl.listTags)
 	r.GET("/tags/:id/articles", ctrl.listTagArticles)
 }
+
+// RegisterAdminRoutes 注册后台标签管理路由
+func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
+	r.GET("/tags", ctrl.listTags)
+}

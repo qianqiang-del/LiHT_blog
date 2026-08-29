@@ -24,6 +24,7 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup, authRepo repository.A
 func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
 	r.GET("/articles", ctrl.adminListArticles)
 	r.GET("/articles/:id", ctrl.adminGetArticleDetail)
+	r.POST("/articles", ctrl.adminCreateArticle)
 	r.PUT("/articles/:id/status", ctrl.adminUpdateArticleStatus)
 	r.DELETE("/articles/:id", ctrl.adminDeleteArticle)
 }

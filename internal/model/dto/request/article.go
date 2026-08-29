@@ -24,3 +24,13 @@ type AdminArticleListRequest struct {
 type AdminUpdateArticleStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=正常 下架"` // 正常=1 下架=0
 }
+
+// AdminCreateArticleRequest 后台发布文章请求
+type AdminCreateArticleRequest struct {
+	Title      string `json:"title" binding:"required,max=50"`
+	Summary    string `json:"summary" binding:"max=200"`
+	Content    string `json:"content" binding:"required,max=5000"`
+	Cover      string `json:"cover"`
+	CategoryID uint   `json:"category_id" binding:"required"`
+	TagIDs     []uint `json:"tag_ids" binding:"max=3"`
+}

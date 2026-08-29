@@ -156,12 +156,16 @@ func (a *App) initDependencies() {
 	tagSvc := service.NewTagService(tagRepo, articleRepo)
 	authSvc := service.NewAuthService(authRepo, emailSender)
 	commentSvc := service.NewCommentService(commentRepo, articleRepo, a.mysqlDB)
+	uploadSvc, err := service.NewUploadService(a.cfg.OSS)
+	if err != nil {
+		logger.Warn("OSS 上传服务初始化失败", zap.Error(err))
+	}
 
 	// ========== 创建 Stream 消费者 ==========
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
 
 	// ========== 创建 Router ==========
-	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc, uploadSvc)
 }
 
 // initRouter 初始化路由

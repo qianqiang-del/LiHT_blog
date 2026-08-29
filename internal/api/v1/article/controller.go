@@ -202,3 +202,19 @@ func (ctrl *Controller) adminDeleteArticle(c *gin.Context) {
 
 	response.Success(c, nil)
 }
+
+// adminCreateArticle POST /api/v1/admin/articles
+func (ctrl *Controller) adminCreateArticle(c *gin.Context) {
+	var req request.AdminCreateArticleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误")
+		return
+	}
+
+	if err := ctrl.svc.AdminCreateArticle(req); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, "发布成功")
+}

@@ -36,4 +36,6 @@ type ArticleRepository interface {
 	UpdateStatus(id uint, status int8) error
 	// HardDelete 硬删除文章
 	HardDelete(id uint) error
+	// Create 创建文章（含标签关联）
+	Create(article *entity.Article, tagIDs []uint) error
 }

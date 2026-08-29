@@ -3,12 +3,14 @@ package service
 import (
 	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
+	"blog/internal/model/entity"
 	"blog/internal/repository"
 	"blog/internal/stream"
 	"blog/pkg/errors"
 	"blog/pkg/response"
 	"context"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -297,6 +299,27 @@ func (s *service) AdminDeleteArticle(id uint) error {
 
 	if err := s.repo.HardDelete(id); err != nil {
 		return errors.New(errors.CodeInternalError, "删除文章失败")
+	}
+
+	return nil
+}
+
+// AdminCreateArticle 后台发布文章
+func (s *service) AdminCreateArticle(req request.AdminCreateArticleRequest) error {
+	now := time.Now()
+	article := &entity.Article{
+		Title:       req.Title,
+		Summary:     req.Summary,
+		Content:     req.Content,
+		Cover:       req.Cover,
+		AuthorID:    1, //
+		CategoryID:  req.CategoryID,
+		Status:      1, // 默认正常状态
+		PublishedAt: &now,
+	}
+
+	if err := s.repo.Create(article, req.TagIDs); err != nil {
+		return errors.New(errors.CodeInternalError, "发布文章失败")
 	}
 
 	return nil
