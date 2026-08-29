@@ -1,10 +1,12 @@
 package service
 
 import (
+	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
 	"blog/internal/model/entity"
 	"blog/internal/repository"
 	"blog/pkg/errors"
+	"blog/pkg/response"
 
 	"gorm.io/gorm"
 )
@@ -35,7 +37,6 @@ func (s *commentService) CreateComment(articleID, userID uint, nickname, content
 		UserID:    &userID,
 		Nickname:  nickname,
 		Content:   content,
-		Status:    1,
 	}
 
 	if err := s.repo.Create(comment); err != nil {
@@ -184,4 +185,53 @@ func (s *commentService) LikeComment(commentID, userID uint) (*dto.LikeResponse,
 	}
 
 	return &dto.LikeResponse{Liked: liked, LikeCount: likeCount}, nil
+}
+
+// AdminListComments 后台获取评论列表
+func (s *commentService) AdminListComments(req request.AdminCommentListRequest) (*response.PageResponse, error) {
+	offset := (req.Page - 1) * req.Size
+
+	comments, total, err := s.repo.AdminList(offset, req.Size, req.ArticleID)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "查询评论列表失败")
+	}
+
+	// 组装 DTO
+	type AdminCommentItem struct {
+		ID        uint   `json:"id"`
+		ArticleID uint   `json:"article_id"`
+		ParentID  *uint  `json:"parent_id"`
+		Level     int    `json:"level"` // 1=一级评论 2=二级
+		Nickname  string `json:"nickname"`
+		Content   string `json:"content"`
+		LikeCount int    `json:"like_count"`
+		CreatedAt string `json:"created_at"`
+	}
+
+	list := make([]AdminCommentItem, 0, len(comments))
+	for _, c := range comments {
+		level := 1
+		if c.ParentID != nil {
+			level = 2
+		}
+		list = append(list, AdminCommentItem{
+			ID:        c.ID,
+			ArticleID: c.ArticleID,
+			ParentID:  c.ParentID,
+			Level:     level,
+			Nickname:  c.Nickname,
+			Content:   c.Content,
+			LikeCount: c.LikeCount,
+			CreatedAt: c.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	return response.NewPageResponse(list, total, req.Page, req.Size), nil
+}
+
+func (s *commentService) AdminDeleteComment(id uint) error {
+	if err := s.repo.Delete(id); err != nil {
+		return errors.New(errors.CodeInternalError, "删除评论失败")
+	}
+	return nil
 }

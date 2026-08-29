@@ -23,3 +23,9 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup, authRepo repository.A
 	// 点赞/取消点赞评论
 	authGroup.POST("/comments/:id/like", ctrl.likeComment)
 }
+
+// RegisterAdminRoutes 注册后台评论管理路由
+func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
+	r.GET("/comments", ctrl.adminListComments)
+	r.DELETE("/comments/:id", ctrl.adminDeleteComment)
+}

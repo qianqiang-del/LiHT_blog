@@ -273,3 +273,10 @@ func (r *articleRepository) Create(article *entity.Article, tagIDs []uint) error
 		return nil
 	})
 }
+
+// ListArticleOptions 获取文章选项列表（id + title，用于下拉选择）
+func (r *articleRepository) ListArticleOptions() ([]entity.Article, error) {
+	var articles []entity.Article
+	err := r.db.Select("id", "title").Order("id DESC").Find(&articles).Error
+	return articles, err
+}

@@ -11,4 +11,5 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup) {
 // RegisterAdminRoutes 注册后台标签管理路由
 func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
 	r.GET("/tags", ctrl.listTags)
+	r.POST("/tags", ctrl.adminCreateTag)
 }

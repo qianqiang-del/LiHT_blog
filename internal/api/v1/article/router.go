@@ -23,6 +23,7 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup, authRepo repository.A
 // RegisterAdminRoutes 注册后台文章管理路由
 func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
 	r.GET("/articles", ctrl.adminListArticles)
+	r.GET("/articles/options", ctrl.adminListArticleOptions)
 	r.GET("/articles/:id", ctrl.adminGetArticleDetail)
 	r.POST("/articles", ctrl.adminCreateArticle)
 	r.PUT("/articles/:id/status", ctrl.adminUpdateArticleStatus)

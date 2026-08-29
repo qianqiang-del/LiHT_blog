@@ -24,4 +24,8 @@ type CommentRepository interface {
 	DeleteLike(db *gorm.DB, commentID, userID uint) error
 	// GetLikeCount 获取评论最新点赞数
 	GetLikeCount(db *gorm.DB, commentID uint) (int, error)
+	// AdminList 后台获取评论列表（分页，支持按文章筛选）
+	AdminList(offset, limit int, articleID *uint) ([]entity.Comment, int64, error)
+	// Delete 硬删除评论
+	Delete(id uint) error
 }

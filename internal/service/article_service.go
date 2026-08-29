@@ -324,3 +324,21 @@ func (s *service) AdminCreateArticle(req request.AdminCreateArticleRequest) erro
 
 	return nil
 }
+
+// AdminListArticleOptions 获取文章选项列表
+func (s *service) AdminListArticleOptions() ([]dto.ArticleOption, error) {
+	articles, err := s.repo.ListArticleOptions()
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "查询文章列表失败")
+	}
+
+	list := make([]dto.ArticleOption, 0, len(articles))
+	for _, a := range articles {
+		list = append(list, dto.ArticleOption{
+			ID:    a.ID,
+			Title: a.Title,
+		})
+	}
+
+	return list, nil
+}

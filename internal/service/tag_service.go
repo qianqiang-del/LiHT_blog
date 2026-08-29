@@ -3,6 +3,7 @@ package service
 import (
 	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
+	"blog/internal/model/entity"
 	"blog/internal/repository"
 	"blog/pkg/errors"
 	"blog/pkg/response"
@@ -76,4 +77,15 @@ func (s *tagService) ListTagArticles(tagIDs []uint, req request.ArticleListReque
 	}
 
 	return response.NewPageResponse(list, total, req.Page, req.Size), nil
+}
+
+// AdminCreateTag 后台添加标签
+func (s *tagService) AdminCreateTag(name string) error {
+	tag := &entity.Tag{
+		Name: name,
+	}
+	if err := s.repo.Create(tag); err != nil {
+		return errors.New(errors.CodeInternalError, "添加标签失败")
+	}
+	return nil
 }

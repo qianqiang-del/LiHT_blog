@@ -53,3 +53,8 @@ func (r *tagRepository) ListByTagIDs(tagIDs []uint, offset, limit int) ([]entity
 
 	return articles, total, nil
 }
+
+// Create 创建标签
+func (r *tagRepository) Create(tag *entity.Tag) error {
+	return r.db.Create(tag).Error
+}

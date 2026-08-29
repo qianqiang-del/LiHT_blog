@@ -10,4 +10,5 @@ import (
 type TagService interface {
 	ListTags() ([]dto.TagDTO, error)
 	ListTagArticles(tagIDs []uint, req request.ArticleListRequest) (*response.PageResponse, error)
+	AdminCreateTag(name string) error
 }

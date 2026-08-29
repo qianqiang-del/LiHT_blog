@@ -145,6 +145,7 @@ func (a *App) initDependencies() {
 	tagRepo := repository.NewTagRepository(a.mysqlDB)
 	authRepo := repository.NewAuthRepository(a.mysqlDB, redisRepo)
 	commentRepo := repository.NewCommentRepository(a.mysqlDB)
+	userRepo := repository.NewUserRepository(a.mysqlDB)
 
 	// ========== 创建邮件发送器 ==========
 	emailSender := email.NewSender(&a.cfg.Email)
@@ -156,6 +157,7 @@ func (a *App) initDependencies() {
 	tagSvc := service.NewTagService(tagRepo, articleRepo)
 	authSvc := service.NewAuthService(authRepo, emailSender)
 	commentSvc := service.NewCommentService(commentRepo, articleRepo, a.mysqlDB)
+	userSvc := service.NewUserService(userRepo)
 	uploadSvc, err := service.NewUploadService(a.cfg.OSS)
 	if err != nil {
 		logger.Warn("OSS 上传服务初始化失败", zap.Error(err))
@@ -165,7 +167,7 @@ func (a *App) initDependencies() {
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
 
 	// ========== 创建 Router ==========
-	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc, uploadSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc, uploadSvc, userSvc)
 }
 
 // initRouter 初始化路由

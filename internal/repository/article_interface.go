@@ -38,4 +38,6 @@ type ArticleRepository interface {
 	HardDelete(id uint) error
 	// Create 创建文章（含标签关联）
 	Create(article *entity.Article, tagIDs []uint) error
+	// ListArticleOptions 获取文章选项列表（id + title，用于下拉选择）
+	ListArticleOptions() ([]entity.Article, error)
 }

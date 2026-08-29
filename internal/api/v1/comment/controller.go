@@ -131,3 +131,36 @@ func (ctrl *Controller) listReplies(c *gin.Context) {
 
 	response.Success(c, result)
 }
+
+// adminListComments GET /api/v1/admin/comments
+func (ctrl *Controller) adminListComments(c *gin.Context) {
+	var req request.AdminCommentListRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(c, "分页参数错误")
+		return
+	}
+
+	result, err := ctrl.svc.AdminListComments(req)
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// adminDeleteComment DELETE /api/v1/admin/comments/:id
+func (ctrl *Controller) adminDeleteComment(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的评论 ID")
+		return
+	}
+
+	if err := ctrl.svc.AdminDeleteComment(uint(id)); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
+}

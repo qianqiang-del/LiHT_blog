@@ -11,4 +11,6 @@ func (ctrl *Controller) RegisterRoutes(r *gin.RouterGroup) {
 // RegisterAdminRoutes 注册后台分类管理路由
 func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
 	r.GET("/categories", ctrl.listCategories)
+	r.POST("/categories", ctrl.adminCreateCategory)
+	r.DELETE("/categories/:id", ctrl.adminDeleteCategory)
 }

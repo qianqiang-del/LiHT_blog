@@ -21,6 +21,8 @@ func NewController(svc service.TagService) *Controller {
 }
 
 // listTags GET /api/v1/tags
+
+// listTags GET /api/v1/tags
 func (ctrl *Controller) listTags(c *gin.Context) {
 	result, err := ctrl.svc.ListTags()
 	if err != nil {
@@ -59,4 +61,20 @@ func (ctrl *Controller) listTagArticles(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+// adminCreateTag POST /api/v1/admin/tags
+func (ctrl *Controller) adminCreateTag(c *gin.Context) {
+	var req request.AdminCreateTagRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "标签名称不能为空且不超过20字")
+		return
+	}
+
+	if err := ctrl.svc.AdminCreateTag(req.Name); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, "添加成功")
 }

@@ -57,3 +57,9 @@ type AdminArticleListItem struct {
 	Hot          int        `json:"hot"`
 	PublishedAt  *time.Time `json:"published_at"`
 }
+
+// ArticleOption 文章选项（用于下拉选择）
+type ArticleOption struct {
+	ID    uint   `json:"id"`
+	Title string `json:"title"`
+}

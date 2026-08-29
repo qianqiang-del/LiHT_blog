@@ -8,6 +8,7 @@ import (
 	"blog/internal/api/v1/comment"
 	"blog/internal/api/v1/tag"
 	"blog/internal/api/v1/upload"
+	"blog/internal/api/v1/user"
 	"blog/internal/middleware"
 	"blog/internal/repository"
 	"blog/internal/service"
@@ -24,6 +25,7 @@ type Router struct {
 	authCtrl     *auth.Controller
 	commentCtrl  *comment.Controller
 	uploadCtrl   *upload.Controller
+	userCtrl     *user.Controller
 }
 
 // NewRouter 创建路由
@@ -35,6 +37,7 @@ func NewRouter(
 	authSvc service.AuthService,
 	commentSvc service.CommentService,
 	uploadSvc service.UploadService,
+	userSvc service.UserService,
 ) *Router {
 	return &Router{
 		articleCtrl:  article.NewController(articleSvc),
@@ -44,6 +47,7 @@ func NewRouter(
 		authCtrl:     auth.NewController(authSvc),
 		commentCtrl:  comment.NewController(commentSvc),
 		uploadCtrl:   upload.NewController(uploadSvc),
+		userCtrl:     user.NewController(userSvc),
 	}
 }
 
@@ -79,7 +83,9 @@ func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository) {
 		r.articleCtrl.RegisterAdminRoutes(adminGroup)
 		r.categoryCtrl.RegisterAdminRoutes(adminGroup)
 		r.tagCtrl.RegisterAdminRoutes(adminGroup)
+		r.commentCtrl.RegisterAdminRoutes(adminGroup)
 		r.uploadCtrl.RegisterRoutes(adminGroup)
+		r.userCtrl.RegisterAdminRoutes(adminGroup)
 	}
 }
 

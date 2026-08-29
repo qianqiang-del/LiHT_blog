@@ -47,3 +47,13 @@ func (r *categoryRepository) ListByCategoryID(categoryID uint, offset, limit int
 
 	return articles, total, nil
 }
+
+// Create 创建分类
+func (r *categoryRepository) Create(category *entity.Category) error {
+	return r.db.Create(category).Error
+}
+
+// Delete 硬删除分类
+func (r *categoryRepository) Delete(id uint) error {
+	return r.db.Unscoped().Delete(&entity.Category{}, id).Error
+}

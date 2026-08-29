@@ -218,3 +218,14 @@ func (ctrl *Controller) adminCreateArticle(c *gin.Context) {
 
 	response.Success(c, "发布成功")
 }
+
+// adminListArticleOptions GET /api/v1/admin/articles/options
+func (ctrl *Controller) adminListArticleOptions(c *gin.Context) {
+	result, err := ctrl.svc.AdminListArticleOptions()
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}

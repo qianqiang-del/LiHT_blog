@@ -4,15 +4,12 @@ import (
 	"blog/internal/model/entity"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
-// commentRepository 评论仓储实现
 type commentRepository struct {
 	db *gorm.DB
 }
 
-// NewCommentRepository 创建评论仓储
 func NewCommentRepository(db *gorm.DB) CommentRepository {
 	return &commentRepository{db: db}
 }
@@ -22,46 +19,38 @@ func (r *commentRepository) Create(comment *entity.Comment) error {
 	return r.db.Create(comment).Error
 }
 
-// ListByArticleID 获取文章的一级评论列表（分页，按时间倒序）
+// ListByArticleID 获取文章的一级评论列表
 func (r *commentRepository) ListByArticleID(articleID uint, offset, limit int) ([]entity.Comment, int64, error) {
 	var comments []entity.Comment
 	var total int64
 
 	query := r.db.Model(&entity.Comment{}).
-		Where("article_id = ? AND parent_id IS NULL AND status = ?", articleID, 1)
+		Where("article_id = ? AND parent_id IS NULL", articleID)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	if err := query.
-		Order("created_at DESC").
-		Offset(offset).
-		Limit(limit).
-		Find(&comments).Error; err != nil {
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&comments).Error; err != nil {
 		return nil, 0, err
 	}
 
 	return comments, total, nil
 }
 
-// ListByParentID 获取评论的回复列表（分页，按时间正序）
+// ListByParentID 获取评论的回复列表
 func (r *commentRepository) ListByParentID(parentID uint, offset, limit int) ([]entity.Comment, int64, error) {
 	var comments []entity.Comment
 	var total int64
 
 	query := r.db.Model(&entity.Comment{}).
-		Where("parent_id = ? AND status = ?", parentID, 1)
+		Where("parent_id = ?", parentID)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	if err := query.
-		Order("created_at ASC").
-		Offset(offset).
-		Limit(limit).
-		Find(&comments).Error; err != nil {
+	if err := query.Order("created_at ASC").Offset(offset).Limit(limit).Find(&comments).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -71,67 +60,47 @@ func (r *commentRepository) ListByParentID(parentID uint, offset, limit int) ([]
 // CountReplies 统计多条评论的回复数
 func (r *commentRepository) CountReplies(commentIDs []uint) (map[uint]int, error) {
 	if len(commentIDs) == 0 {
-		return nil, nil
+		return make(map[uint]int), nil
 	}
 
-	type result struct {
+	type Result struct {
 		ParentID uint
 		Count    int
 	}
-	var results []result
+	var results []Result
 
 	if err := r.db.Model(&entity.Comment{}).
-		Select("parent_id, COUNT(*) as count").
-		Where("parent_id IN ? AND status = ?", commentIDs, 1).
+		Where("parent_id IN ?", commentIDs).
 		Group("parent_id").
-		Find(&results).Error; err != nil {
+		Select("parent_id, COUNT(*) as count").
+		Scan(&results).Error; err != nil {
 		return nil, err
 	}
 
-	countMap := make(map[uint]int, len(results))
-	for _, r := range results {
-		countMap[r.ParentID] = r.Count
+	counts := make(map[uint]int, len(results))
+	for _, result := range results {
+		counts[result.ParentID] = result.Count
 	}
-	return countMap, nil
+	return counts, nil
 }
 
 // HasLiked 查询用户是否已点赞某评论
 func (r *commentRepository) HasLiked(db *gorm.DB, commentID, userID uint) (bool, error) {
 	var count int64
-	err := db.Model(&entity.CommentLike{}).
-		Where("comment_id = ? AND user_id = ?", commentID, userID).
-		Count(&count).Error
-	return count > 0, err
+	if err := db.Table("comment_likes").Where("comment_id = ? AND user_id = ?", commentID, userID).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
-// CreateLike 创建评论点赞记录；仅实际插入成功才同步 like_count +1（并发重复点赞不重复计数）
+// CreateLike 创建评论点赞记录
 func (r *commentRepository) CreateLike(db *gorm.DB, commentID, userID uint) error {
-	res := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&entity.CommentLike{
-		CommentID: commentID,
-		UserID:    userID,
-	})
-	if res.Error != nil {
-		return res.Error
-	}
-	if res.RowsAffected == 0 {
-		return nil // 已点赞过，不重复计数
-	}
-	return db.Model(&entity.Comment{}).Where("id = ?", commentID).
-		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
+	return db.Exec("INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)", commentID, userID).Error
 }
 
-// DeleteLike 删除评论点赞记录；仅实际删除成功才同步 like_count -1（并发重复取消不重复扣减）
+// DeleteLike 删除评论点赞记录
 func (r *commentRepository) DeleteLike(db *gorm.DB, commentID, userID uint) error {
-	res := db.Where("comment_id = ? AND user_id = ?", commentID, userID).
-		Delete(&entity.CommentLike{})
-	if res.Error != nil {
-		return res.Error
-	}
-	if res.RowsAffected == 0 {
-		return nil // 未点赞过，不重复扣减
-	}
-	return db.Model(&entity.Comment{}).Where("id = ?", commentID).
-		UpdateColumn("like_count", gorm.Expr("like_count - 1")).Error
+	return db.Exec("DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?", commentID, userID).Error
 }
 
 // GetLikeCount 获取评论最新点赞数
@@ -141,4 +110,26 @@ func (r *commentRepository) GetLikeCount(db *gorm.DB, commentID uint) (int, erro
 		return 0, err
 	}
 	return comment.LikeCount, nil
+}
+
+// AdminList 后台查询评论列表
+func (r *commentRepository) AdminList(offset, limit int, articleID *uint) ([]entity.Comment, int64, error) {
+	var comments []entity.Comment
+	var total int64
+	query := r.db.Model(&entity.Comment{})
+	if articleID != nil {
+		query = query.Where("article_id = ?", *articleID)
+	}
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&comments).Error; err != nil {
+		return nil, 0, err
+	}
+	return comments, total, nil
+}
+
+// Delete 硬删除评论
+func (r *commentRepository) Delete(id uint) error {
+	return r.db.Unscoped().Delete(&entity.Comment{}, id).Error
 }

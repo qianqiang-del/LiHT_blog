@@ -10,4 +10,6 @@ import (
 type CategoryService interface {
 	GetCategoryDetail() ([]dto.CategoryDTO, error)
 	ListCategoryArticles(categoryID uint, req request.ArticleListRequest) (*response.PageResponse, error)
+	AdminCreateCategory(req request.AdminCreateCategoryRequest) error
+	AdminDeleteCategory(id uint) error
 }
