@@ -8,6 +8,8 @@ import (
 
 // CommentRepository 评论仓储接口
 type CommentRepository interface {
+	// Count 统计评论总数
+	Count() (int64, error)
 	// Create 创建评论
 	Create(comment *entity.Comment) error
 	// ListByArticleID 获取文章的一级评论列表（分页）

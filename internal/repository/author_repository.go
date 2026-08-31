@@ -24,6 +24,11 @@ func (r *authorRepository) GetAuthor() (*entity.Author, error) {
 	return &author, nil
 }
 
+// Update 更新作者信息
+func (r *authorRepository) Update(author *entity.Author) error {
+	return r.db.Save(author).Error
+}
+
 // CountArticles 统计作者发布文章数量
 func (r *authorRepository) CountArticles(authorID uint) (int64, error) {
 	var count int64

@@ -4,6 +4,7 @@ import (
 	"blog/internal/model/dto/request"
 	"blog/internal/service"
 	"blog/pkg/response"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,4 +34,42 @@ func (ctrl *Controller) adminListUsers(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+// adminUpdateUserStatus PUT /api/v1/admin/users/:id/status
+func (ctrl *Controller) adminUpdateUserStatus(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的用户 ID")
+		return
+	}
+
+	var req request.AdminUpdateUserStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "状态参数错误")
+		return
+	}
+
+	if err := ctrl.svc.AdminUpdateUserStatus(uint(id), req); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
+}
+
+// adminDeleteUser DELETE /api/v1/admin/users/:id
+func (ctrl *Controller) adminDeleteUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的用户 ID")
+		return
+	}
+
+	if err := ctrl.svc.AdminDeleteUser(uint(id)); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
 }

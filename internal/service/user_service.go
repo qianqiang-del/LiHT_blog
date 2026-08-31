@@ -1,6 +1,7 @@
 package service
 
 import (
+	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
 	"blog/internal/repository"
 	"blog/pkg/errors"
@@ -56,4 +57,35 @@ func (s *userService) AdminListUsers(page, size int) (*response.PageResponse, er
 	}
 
 	return response.NewPageResponse(list, total, page, size), nil
+}
+
+func (s *userService) AdminUpdateUserStatus(id uint, req request.AdminUpdateUserStatusRequest) error {
+	// 检查用户是否存在
+	_, err := s.repo.GetByID(id)
+	if err != nil {
+		return errors.New(errors.CodeResourceNotFound, "用户不存在")
+	}
+
+	// 验证状态值
+	if *req.Status != 0 && *req.Status != 1 {
+		return errors.New(errors.CodeBadRequest, "状态值必须为0或1")
+	}
+
+	if err := s.repo.UpdateStatus(id, *req.Status); err != nil {
+		return errors.New(errors.CodeInternalError, "更新用户状态失败")
+	}
+	return nil
+}
+
+func (s *userService) AdminDeleteUser(id uint) error {
+	// 检查用户是否存在
+	_, err := s.repo.GetByID(id)
+	if err != nil {
+		return errors.New(errors.CodeResourceNotFound, "用户不存在")
+	}
+
+	if err := s.repo.Delete(id); err != nil {
+		return errors.New(errors.CodeInternalError, "删除用户失败")
+	}
+	return nil
 }

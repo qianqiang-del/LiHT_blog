@@ -6,6 +6,7 @@ import (
 	"blog/internal/api/v1/author"
 	"blog/internal/api/v1/category"
 	"blog/internal/api/v1/comment"
+	"blog/internal/api/v1/dashboard"
 	"blog/internal/api/v1/tag"
 	"blog/internal/api/v1/upload"
 	"blog/internal/api/v1/user"
@@ -18,14 +19,15 @@ import (
 
 // Router 路由
 type Router struct {
-	articleCtrl  *article.Controller
-	authorCtrl   *author.Controller
-	categoryCtrl *category.Controller
-	tagCtrl      *tag.Controller
-	authCtrl     *auth.Controller
-	commentCtrl  *comment.Controller
-	uploadCtrl   *upload.Controller
-	userCtrl     *user.Controller
+	articleCtrl   *article.Controller
+	authorCtrl    *author.Controller
+	categoryCtrl  *category.Controller
+	tagCtrl       *tag.Controller
+	authCtrl      *auth.Controller
+	commentCtrl   *comment.Controller
+	uploadCtrl    *upload.Controller
+	userCtrl      *user.Controller
+	dashboardCtrl *dashboard.Controller
 }
 
 // NewRouter 创建路由
@@ -38,16 +40,18 @@ func NewRouter(
 	commentSvc service.CommentService,
 	uploadSvc service.UploadService,
 	userSvc service.UserService,
+	dashboardSvc service.DashboardService,
 ) *Router {
 	return &Router{
-		articleCtrl:  article.NewController(articleSvc),
-		authorCtrl:   author.NewController(authorSvc),
-		categoryCtrl: category.NewController(categorySvc),
-		tagCtrl:      tag.NewController(tagSvc),
-		authCtrl:     auth.NewController(authSvc),
-		commentCtrl:  comment.NewController(commentSvc),
-		uploadCtrl:   upload.NewController(uploadSvc),
-		userCtrl:     user.NewController(userSvc),
+		articleCtrl:   article.NewController(articleSvc),
+		authorCtrl:    author.NewController(authorSvc),
+		categoryCtrl:  category.NewController(categorySvc),
+		tagCtrl:       tag.NewController(tagSvc),
+		authCtrl:      auth.NewController(authSvc),
+		commentCtrl:   comment.NewController(commentSvc),
+		uploadCtrl:    upload.NewController(uploadSvc),
+		userCtrl:      user.NewController(userSvc),
+		dashboardCtrl: dashboard.NewController(dashboardSvc),
 	}
 }
 
@@ -80,7 +84,9 @@ func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository) {
 	// 后台管理路由组
 	adminGroup := engine.Group("/api/v1/admin")
 	{
+		r.dashboardCtrl.RegisterAdminRoutes(adminGroup)
 		r.articleCtrl.RegisterAdminRoutes(adminGroup)
+		r.authorCtrl.RegisterAdminRoutes(adminGroup)
 		r.categoryCtrl.RegisterAdminRoutes(adminGroup)
 		r.tagCtrl.RegisterAdminRoutes(adminGroup)
 		r.commentCtrl.RegisterAdminRoutes(adminGroup)

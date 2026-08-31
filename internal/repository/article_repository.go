@@ -17,6 +17,13 @@ func NewArticleRepository(db *gorm.DB) ArticleRepository {
 	return &articleRepository{db: db}
 }
 
+// Count 统计文章总数
+func (r *articleRepository) Count() (int64, error) {
+	var count int64
+	err := r.db.Model(&entity.Article{}).Count(&count).Error
+	return count, err
+}
+
 // ListPublished 查询已发布的文章列表（按发布时间倒序）
 func (r *articleRepository) ListPublished(offset, limit int) ([]entity.Article, int64, error) {
 	var articles []entity.Article

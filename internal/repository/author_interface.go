@@ -6,6 +6,8 @@ import "blog/internal/model/entity"
 type AuthorRepository interface {
 	// GetAuthor 获取唯一作者
 	GetAuthor() (*entity.Author, error)
+	// Update 更新作者信息
+	Update(author *entity.Author) error
 	// CountArticles 统计作者的文章数量
 	CountArticles(authorID uint) (int64, error)
 	// CountCategories 统计作者的分类数量（去重）

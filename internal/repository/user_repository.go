@@ -14,6 +14,13 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
+// Count 统计用户总数
+func (r *userRepository) Count() (int64, error) {
+	var count int64
+	err := r.db.Model(&entity.User{}).Count(&count).Error
+	return count, err
+}
+
 // AdminList 后台获取用户列表
 func (r *userRepository) AdminList(offset, limit int) ([]entity.User, int64, error) {
 	var users []entity.User
@@ -38,6 +45,16 @@ func (r *userRepository) GetByID(id uint) (*entity.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+// UpdateStatus 更新用户状态
+func (r *userRepository) UpdateStatus(id uint, status int8) error {
+	return r.db.Model(&entity.User{}).Where("id = ?", id).Update("status", status).Error
+}
+
+// Delete 硬删除用户
+func (r *userRepository) Delete(id uint) error {
+	return r.db.Unscoped().Delete(&entity.User{}, id).Error
 }
 
 // CountComments 统计用户的评论数

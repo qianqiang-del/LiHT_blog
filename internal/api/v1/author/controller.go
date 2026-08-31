@@ -1,6 +1,7 @@
 package author
 
 import (
+	"blog/internal/model/dto/request"
 	"blog/internal/service"
 	"blog/pkg/response"
 
@@ -37,4 +38,31 @@ func (ctrl *Controller) getAbout(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+// adminGetAuthor GET /api/v1/admin/author
+func (ctrl *Controller) adminGetAuthor(c *gin.Context) {
+	result, err := ctrl.svc.GetAbout()
+	if err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// adminUpdateAuthor PUT /api/v1/admin/author
+func (ctrl *Controller) adminUpdateAuthor(c *gin.Context) {
+	var req request.AdminUpdateAuthorRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误")
+		return
+	}
+
+	if err := ctrl.svc.AdminUpdateAuthor(req); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
 }

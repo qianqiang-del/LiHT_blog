@@ -1,6 +1,7 @@
 package service
 
 import (
+	"blog/internal/model/dto/request"
 	dto "blog/internal/model/dto/response"
 	"blog/internal/repository"
 	"blog/pkg/errors"
@@ -65,7 +66,41 @@ func (s *authorService) GetAbout() (*dto.AboutDTO, error) {
 		Github:     author.Github,
 		About:      author.About,
 		Background: author.Background,
-		Skills:     author.Skills,
 		AboutBlog:  author.AboutBlog,
 	}, nil
+}
+
+// AdminUpdateAuthor 后台更新作者信息
+func (s *authorService) AdminUpdateAuthor(req request.AdminUpdateAuthorRequest) error {
+	author, err := s.repo.GetAuthor()
+	if err != nil {
+		return errors.New(errors.CodeInternalError, "查询作者信息失败")
+	}
+
+	if req.Nickname != nil {
+		author.Nickname = *req.Nickname
+	}
+	if req.Avatar != nil {
+		author.Avatar = *req.Avatar
+	}
+	if req.Bio != nil {
+		author.Bio = *req.Bio
+	}
+	if req.Github != nil {
+		author.Github = *req.Github
+	}
+	if req.About != nil {
+		author.About = *req.About
+	}
+	if req.Background != nil {
+		author.Background = *req.Background
+	}
+	if req.AboutBlog != nil {
+		author.AboutBlog = *req.AboutBlog
+	}
+
+	if err := s.repo.Update(author); err != nil {
+		return errors.New(errors.CodeInternalError, "更新作者信息失败")
+	}
+	return nil
 }

@@ -61,6 +61,21 @@ func Auth(authRepo repository.AuthRepository) gin.HandlerFunc {
 			return
 		}
 
+		// 检查用户状态
+		if authRepo != nil {
+			user, err := authRepo.FindByID(claims.GetUserID())
+			if err != nil || user == nil {
+				response.Unauthorized(c, "用户不存在")
+				c.Abort()
+				return
+			}
+			if user.Status != 1 {
+				response.Error(c, errors.CodeUserDisabled, "账号已被禁用")
+				c.Abort()
+				return
+			}
+		}
+
 		// 将用户信息存入上下文
 		c.Set(ContextUserID, claims.GetUserID())
 		c.Set(ContextUsername, claims.GetUsername())

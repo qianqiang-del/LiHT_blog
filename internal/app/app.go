@@ -158,6 +158,7 @@ func (a *App) initDependencies() {
 	authSvc := service.NewAuthService(authRepo, emailSender)
 	commentSvc := service.NewCommentService(commentRepo, articleRepo, a.mysqlDB)
 	userSvc := service.NewUserService(userRepo)
+	dashboardSvc := service.NewDashboardService(articleRepo, commentRepo, userRepo)
 	uploadSvc, err := service.NewUploadService(a.cfg.OSS)
 	if err != nil {
 		logger.Warn("OSS 上传服务初始化失败", zap.Error(err))
@@ -167,7 +168,7 @@ func (a *App) initDependencies() {
 	a.consumer = stream.NewConsumer(redisRepo, a.mysqlDB)
 
 	// ========== 创建 Router ==========
-	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc, uploadSvc, userSvc)
+	a.router = api.NewRouter(articleSvc, authorSvc, categorySvc, tagSvc, authSvc, commentSvc, uploadSvc, userSvc, dashboardSvc)
 }
 
 // initRouter 初始化路由

@@ -14,6 +14,13 @@ func NewCommentRepository(db *gorm.DB) CommentRepository {
 	return &commentRepository{db: db}
 }
 
+// Count 统计评论总数
+func (r *commentRepository) Count() (int64, error) {
+	var count int64
+	err := r.db.Model(&entity.Comment{}).Count(&count).Error
+	return count, err
+}
+
 // Create 创建评论
 func (r *commentRepository) Create(comment *entity.Comment) error {
 	return r.db.Create(comment).Error
@@ -95,12 +102,20 @@ func (r *commentRepository) HasLiked(db *gorm.DB, commentID, userID uint) (bool,
 
 // CreateLike 创建评论点赞记录
 func (r *commentRepository) CreateLike(db *gorm.DB, commentID, userID uint) error {
-	return db.Exec("INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)", commentID, userID).Error
+	if err := db.Exec("INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)", commentID, userID).Error; err != nil {
+		return err
+	}
+	return db.Model(&entity.Comment{}).Where("id = ?", commentID).
+		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
 }
 
 // DeleteLike 删除评论点赞记录
 func (r *commentRepository) DeleteLike(db *gorm.DB, commentID, userID uint) error {
-	return db.Exec("DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?", commentID, userID).Error
+	if err := db.Exec("DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?", commentID, userID).Error; err != nil {
+		return err
+	}
+	return db.Model(&entity.Comment{}).Where("id = ?", commentID).
+		UpdateColumn("like_count", gorm.Expr("GREATEST(like_count - 1, 0)")).Error
 }
 
 // GetLikeCount 获取评论最新点赞数

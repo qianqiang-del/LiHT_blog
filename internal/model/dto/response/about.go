@@ -9,6 +9,5 @@ type AboutDTO struct {
 	Github     string `json:"github"`
 	About      string `json:"about"`
 	Background string `json:"background"`
-	Skills     string `json:"skills"`
 	AboutBlog  string `json:"about_blog"`
 }
