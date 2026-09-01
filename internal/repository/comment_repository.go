@@ -144,7 +144,36 @@ func (r *commentRepository) AdminList(offset, limit int, articleID *uint) ([]ent
 	return comments, total, nil
 }
 
-// Delete 硬删除评论
+// Delete 后台硬删除评论（一级评论连带子评论一起删除，并更新文章评论数）
 func (r *commentRepository) Delete(id uint) error {
-	return r.db.Unscoped().Delete(&entity.Comment{}, id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 先查询该评论，判断是否为一级评论
+		var comment entity.Comment
+		if err := tx.Unscoped().First(&comment, id).Error; err != nil {
+			return err
+		}
+
+		deleteCount := 1 // 至少删除 1 条
+
+		// 如果是一级评论（parent_id 为空），先删除所有子评论
+		if comment.ParentID == nil {
+			var childCount int64
+			if err := tx.Unscoped().Model(&entity.Comment{}).Where("parent_id = ?", id).Count(&childCount).Error; err != nil {
+				return err
+			}
+			if err := tx.Unscoped().Where("parent_id = ?", id).Delete(&entity.Comment{}).Error; err != nil {
+				return err
+			}
+			deleteCount += int(childCount)
+		}
+
+		// 删除该评论本身
+		if err := tx.Unscoped().Delete(&entity.Comment{}, id).Error; err != nil {
+			return err
+		}
+
+		// 更新文章评论数
+		return tx.Model(&entity.Article{}).Where("id = ?", comment.ArticleID).
+			UpdateColumn("comment_count", gorm.Expr("GREATEST(comment_count - ?, 0)", deleteCount)).Error
+	})
 }

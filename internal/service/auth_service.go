@@ -146,33 +146,33 @@ func (s *authService) Logout(token string) error {
 	return s.authRepo.AddTokenBlacklist(token, ttl)
 }
 
-// Register 用户注册
-func (s *authService) Register(req request.RegisterRequest) error {
+// Register 用户注册（注册成功自动登录）
+func (s *authService) Register(req request.RegisterRequest) (*dto.LoginResponse, error) {
 	// 验证码校验
 	storedCode, err := s.authRepo.GetEmailCode(req.Email)
 	if err != nil {
-		return errors.New(errors.CodeInvalidParam, "验证码已过期或无效")
+		return nil, errors.New(errors.CodeInvalidParam, "验证码已过期或无效")
 	}
 	if storedCode != req.Code {
-		return errors.New(errors.CodeInvalidParam, "验证码错误")
+		return nil, errors.New(errors.CodeInvalidParam, "验证码错误")
 	}
 
 	// 检查用户名是否已存在
 	_, err = s.authRepo.FindByUsername(req.Username)
 	if err == nil {
-		return errors.New(errors.CodeConflict, "用户名已存在")
+		return nil, errors.New(errors.CodeConflict, "用户名已存在")
 	}
 
 	// 检查邮箱是否已注册
 	_, err = s.authRepo.FindByEmail(req.Email)
 	if err == nil {
-		return errors.New(errors.CodeConflict, "该邮箱已注册")
+		return nil, errors.New(errors.CodeConflict, "该邮箱已注册")
 	}
 
 	// 密码加密
 	hashedPassword, err := hashPassword(req.Password)
 	if err != nil {
-		return errors.New(errors.CodeInternalError, "密码加密失败")
+		return nil, errors.New(errors.CodeInternalError, "密码加密失败")
 	}
 
 	// 创建用户
@@ -183,13 +183,26 @@ func (s *authService) Register(req request.RegisterRequest) error {
 		Status:   1,
 	}
 	if err := s.authRepo.CreateUser(user); err != nil {
-		return errors.New(errors.CodeInternalError, "创建用户失败")
+		return nil, errors.New(errors.CodeInternalError, "创建用户失败")
 	}
 
 	// 删除已使用的验证码
 	_ = s.authRepo.DeleteEmailCode(req.Email)
 
-	return nil
+	// 生成 JWT token（注册成功自动登录）
+	token, err := jwt.GenerateToken(user.ID, user.Username)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternalError, "生成token失败")
+	}
+
+	return &dto.LoginResponse{
+		Token: token,
+		User: dto.UserInfo{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+		},
+	}, nil
 }
 
 // generateCode 生成 6 位随机验证码

@@ -1,13 +1,15 @@
 package auth
 
 import (
+	"strings"
+
 	"blog/internal/middleware"
 	"blog/internal/model/dto/request"
 	"blog/internal/service"
 	"blog/pkg/response"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // Controller 认证控制器
@@ -40,16 +42,17 @@ func (ctrl *Controller) sendCode(c *gin.Context) {
 func (ctrl *Controller) register(c *gin.Context) {
 	var req request.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误: "+err.Error())
+		response.BadRequest(c, parseValidationErr(err))
 		return
 	}
 
-	if err := ctrl.svc.Register(req); err != nil {
+	result, err := ctrl.svc.Register(req)
+	if err != nil {
 		response.BizError(c, err)
 		return
 	}
 
-	response.SuccessWithMessage(c, "注册成功", nil)
+	response.Success(c, result)
 }
 
 // login POST /api/v1/auth/login
@@ -113,4 +116,32 @@ func (ctrl *Controller) logout(c *gin.Context) {
 	}
 
 	response.SuccessWithMessage(c, "退出成功", nil)
+}
+
+// parseValidationErr 将校验错误转为友好提示
+func parseValidationErr(err error) string {
+	if errs, ok := err.(validator.ValidationErrors); ok {
+		for _, e := range errs {
+			field := e.Field()
+			switch field {
+			case "Username":
+				switch e.Tag() {
+				case "min":
+					return "用户名至少3个字符"
+				case "max":
+					return "用户名不能超过50个字符"
+				}
+			case "Password":
+				switch e.Tag() {
+				case "min":
+					return "密码至少6个字符"
+				}
+			case "Email":
+				return "邮箱格式不正确"
+			case "Code":
+				return "验证码格式不正确"
+			}
+		}
+	}
+	return "请求参数错误"
 }

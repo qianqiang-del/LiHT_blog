@@ -229,6 +229,7 @@ func (s *commentService) AdminListComments(req request.AdminCommentListRequest) 
 	return response.NewPageResponse(list, total, req.Page, req.Size), nil
 }
 
+// AdminDeleteComment 后台硬删除评论
 func (s *commentService) AdminDeleteComment(id uint) error {
 	if err := s.repo.Delete(id); err != nil {
 		return errors.New(errors.CodeInternalError, "删除评论失败")

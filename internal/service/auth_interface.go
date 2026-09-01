@@ -9,8 +9,8 @@ import (
 type AuthService interface {
 	// SendCode 发送验证码
 	SendCode(req request.SendCodeRequest) error
-	// Register 用户注册
-	Register(req request.RegisterRequest) error
+	// Register 用户注册（注册成功自动登录）
+	Register(req request.RegisterRequest) (*dto.LoginResponse, error)
 	// Login 用户登录
 	Login(req request.LoginRequest) (*dto.LoginResponse, error)
 	// Logout 退出登录（将 token 加入黑名单）
