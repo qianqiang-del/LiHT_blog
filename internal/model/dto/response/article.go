@@ -26,6 +26,7 @@ type HotArticleItem struct {
 type ArticleDetail struct {
 	ID           uint         `json:"id"`
 	Title        string       `json:"title"`
+	Summary      string       `json:"summary"`
 	Content      string       `json:"content"`
 	Cover        string       `json:"cover"`
 	Category     *CategoryDTO `json:"category,omitempty"`

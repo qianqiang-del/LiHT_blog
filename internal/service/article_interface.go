@@ -17,5 +17,6 @@ type ArticleService interface {
 	AdminUpdateArticleStatus(id uint, status int8) error
 	AdminDeleteArticle(id uint) error
 	AdminCreateArticle(req request.AdminCreateArticleRequest) error
+	AdminUpdateArticle(id uint, req request.AdminUpdateArticleRequest) error
 	AdminListArticleOptions() ([]dto.ArticleOption, error)
 }

@@ -100,6 +100,65 @@ func GetUsername(c *gin.Context) string {
 	return ""
 }
 
+// AdminAuth 后台管理 JWT 认证中间件（查 author 表）
+func AdminAuth(authRepo repository.AuthRepository, authorRepo repository.AuthorRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 从 Header 获取 Authorization
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			response.Unauthorized(c, "请提供认证令牌")
+			c.Abort()
+			return
+		}
+
+		// 解析 Bearer Token
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			response.Unauthorized(c, "令牌格式错误")
+			c.Abort()
+			return
+		}
+
+		token := parts[1]
+
+		// 检查 token 是否在黑名单中
+		if authRepo != nil {
+			exists, _ := authRepo.IsTokenBlacklisted(token)
+			if exists {
+				response.Unauthorized(c, "token 已失效")
+				c.Abort()
+				return
+			}
+		}
+
+		// 解析 Token
+		claims, err := jwt.ParseToken(token)
+		if err != nil {
+			if err == jwt.ErrTokenExpired {
+				response.Error(c, errors.CodeTokenExpired, err.Error())
+			} else {
+				response.Error(c, errors.CodeInvalidToken, err.Error())
+			}
+			c.Abort()
+			return
+		}
+
+		// 检查作者状态（查 author 表）
+		author, err := authorRepo.FindByID(claims.GetUserID())
+		if err != nil || author == nil {
+			response.Unauthorized(c, "作者不存在")
+			c.Abort()
+			return
+		}
+
+		// 将作者信息存入上下文
+		c.Set(ContextUserID, author.ID)
+		c.Set(ContextUsername, author.Account)
+
+		c.Next()
+	}
+}
+
 // OptionalAuth 可选的 JWT 认证中间件
 func OptionalAuth(authRepo repository.AuthRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {

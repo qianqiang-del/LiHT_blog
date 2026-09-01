@@ -34,3 +34,13 @@ type AdminCreateArticleRequest struct {
 	CategoryID uint   `json:"category_id" binding:"required"`
 	TagIDs     []uint `json:"tag_ids" binding:"max=3"`
 }
+
+// AdminUpdateArticleRequest 后台更新文章请求
+type AdminUpdateArticleRequest struct {
+	Title      *string `json:"title" binding:"omitempty,max=50"`
+	Summary    *string `json:"summary" binding:"omitempty,max=200"`
+	Content    *string `json:"content" binding:"omitempty,max=5000"`
+	Cover      *string `json:"cover"`
+	CategoryID *uint   `json:"category_id"`
+	TagIDs     []uint  `json:"tag_ids" binding:"max=3"`
+}

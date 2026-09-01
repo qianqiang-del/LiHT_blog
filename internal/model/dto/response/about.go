@@ -3,6 +3,7 @@ package dto
 // AboutDTO 关于页面
 type AboutDTO struct {
 	ID         uint   `json:"id"`
+	Account    string `json:"account"`
 	Nickname   string `json:"nickname"`
 	Avatar     string `json:"avatar"`
 	Bio        string `json:"bio"`

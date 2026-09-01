@@ -281,6 +281,30 @@ func (r *articleRepository) Create(article *entity.Article, tagIDs []uint) error
 	})
 }
 
+// Update 更新文章（含标签关联）
+func (r *articleRepository) Update(article *entity.Article, tagIDs []uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 更新文章基本字段
+		if err := tx.Model(article).Updates(article).Error; err != nil {
+			return err
+		}
+		// 删除旧的标签关联
+		if err := tx.Where("article_id = ?", article.ID).Delete(&entity.ArticleTag{}).Error; err != nil {
+			return err
+		}
+		// 创建新的标签关联
+		for _, tagID := range tagIDs {
+			if err := tx.Create(&entity.ArticleTag{
+				ArticleID: article.ID,
+				TagID:     tagID,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 // ListArticleOptions 获取文章选项列表（id + title，用于下拉选择）
 func (r *articleRepository) ListArticleOptions() ([]entity.Article, error) {
 	var articles []entity.Article

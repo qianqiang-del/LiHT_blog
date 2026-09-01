@@ -24,6 +24,24 @@ func (r *authorRepository) GetAuthor() (*entity.Author, error) {
 	return &author, nil
 }
 
+// FindByID 根据 ID 查询作者
+func (r *authorRepository) FindByID(id uint) (*entity.Author, error) {
+	var author entity.Author
+	if err := r.db.First(&author, id).Error; err != nil {
+		return nil, err
+	}
+	return &author, nil
+}
+
+// FindByAccount 根据账号查询作者
+func (r *authorRepository) FindByAccount(account string) (*entity.Author, error) {
+	var author entity.Author
+	if err := r.db.Where("account = ?", account).First(&author).Error; err != nil {
+		return nil, err
+	}
+	return &author, nil
+}
+
 // Update 更新作者信息
 func (r *authorRepository) Update(author *entity.Author) error {
 	return r.db.Save(author).Error

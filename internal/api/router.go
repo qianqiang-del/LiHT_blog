@@ -56,7 +56,7 @@ func NewRouter(
 }
 
 // Setup 设置路由
-func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository) {
+func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository, authorRepo repository.AuthorRepository) {
 	// 全局中间件
 	engine.Use(middleware.Recovery())
 	engine.Use(middleware.Logger())
@@ -84,14 +84,22 @@ func (r *Router) Setup(engine *gin.Engine, authRepo repository.AuthRepository) {
 	// 后台管理路由组
 	adminGroup := engine.Group("/api/v1/admin")
 	{
-		r.dashboardCtrl.RegisterAdminRoutes(adminGroup)
-		r.articleCtrl.RegisterAdminRoutes(adminGroup)
-		r.authorCtrl.RegisterAdminRoutes(adminGroup)
-		r.categoryCtrl.RegisterAdminRoutes(adminGroup)
-		r.tagCtrl.RegisterAdminRoutes(adminGroup)
-		r.commentCtrl.RegisterAdminRoutes(adminGroup)
-		r.uploadCtrl.RegisterRoutes(adminGroup)
-		r.userCtrl.RegisterAdminRoutes(adminGroup)
+		// 无需鉴权的接口（登录、验证码）
+		r.authorCtrl.RegisterPublicRoutes(adminGroup)
+
+		// 需要鉴权的接口
+		authGroup := adminGroup.Group("")
+		authGroup.Use(middleware.AdminAuth(authRepo, authorRepo))
+		{
+			r.dashboardCtrl.RegisterAdminRoutes(authGroup)
+			r.articleCtrl.RegisterAdminRoutes(authGroup)
+			r.authorCtrl.RegisterAdminRoutes(authGroup)
+			r.categoryCtrl.RegisterAdminRoutes(authGroup)
+			r.tagCtrl.RegisterAdminRoutes(authGroup)
+			r.commentCtrl.RegisterAdminRoutes(authGroup)
+			r.uploadCtrl.RegisterRoutes(authGroup)
+			r.userCtrl.RegisterAdminRoutes(authGroup)
+		}
 	}
 }
 

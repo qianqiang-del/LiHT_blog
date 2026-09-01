@@ -152,7 +152,7 @@ func (a *App) initDependencies() {
 
 	// ========== 创建 Service ==========
 	articleSvc := service.NewArticleService(articleRepo, redisRepo, a.mysqlDB)
-	authorSvc := service.NewAuthorService(authorRepo)
+	authorSvc := service.NewAuthorService(authorRepo, authRepo)
 	categorySvc := service.NewCategoryService(categoryRepo, articleRepo)
 	tagSvc := service.NewTagService(tagRepo, articleRepo)
 	authSvc := service.NewAuthService(authRepo, emailSender)
@@ -184,7 +184,8 @@ func (a *App) initServer() {
 	// 注册路由
 	redisRepo := repository.NewRedisRepository(a.redis)
 	authRepo := repository.NewAuthRepository(a.mysqlDB, redisRepo)
-	a.router.Setup(engine, authRepo)
+	authorRepo := repository.NewAuthorRepository(a.mysqlDB)
+	a.router.Setup(engine, authRepo, authorRepo)
 
 	// 创建 HTTP 服务器
 	a.server = &http.Server{

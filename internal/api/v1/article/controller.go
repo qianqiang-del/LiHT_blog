@@ -219,6 +219,28 @@ func (ctrl *Controller) adminCreateArticle(c *gin.Context) {
 	response.Success(c, "发布成功")
 }
 
+// adminUpdateArticle PUT /api/v1/admin/articles/:id
+func (ctrl *Controller) adminUpdateArticle(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的文章 ID")
+		return
+	}
+
+	var req request.AdminUpdateArticleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误")
+		return
+	}
+
+	if err := ctrl.svc.AdminUpdateArticle(uint(id), req); err != nil {
+		response.BizError(c, err)
+		return
+	}
+
+	response.Success(c, "更新成功")
+}
+
 // adminListArticleOptions GET /api/v1/admin/articles/options
 func (ctrl *Controller) adminListArticleOptions(c *gin.Context) {
 	result, err := ctrl.svc.AdminListArticleOptions()

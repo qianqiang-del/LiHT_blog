@@ -26,6 +26,7 @@ func (ctrl *Controller) RegisterAdminRoutes(r *gin.RouterGroup) {
 	r.GET("/articles/options", ctrl.adminListArticleOptions)
 	r.GET("/articles/:id", ctrl.adminGetArticleDetail)
 	r.POST("/articles", ctrl.adminCreateArticle)
+	r.PUT("/articles/:id", ctrl.adminUpdateArticle)
 	r.PUT("/articles/:id/status", ctrl.adminUpdateArticleStatus)
 	r.DELETE("/articles/:id", ctrl.adminDeleteArticle)
 }

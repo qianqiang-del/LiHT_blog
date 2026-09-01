@@ -9,5 +9,10 @@ import (
 type AuthorService interface {
 	GetAuthorDetail() (*dto.AuthorDTO, error)
 	GetAbout() (*dto.AboutDTO, error)
+	AdminLogin(req request.AdminLoginRequest) (*dto.AdminLoginDTO, error)
+	AdminLogout(token string) error
+	AdminGetCaptcha() (*dto.CaptchaResponse, error)
 	AdminUpdateAuthor(req request.AdminUpdateAuthorRequest) error
+	AdminUpdateAccount(authorID uint, req request.AdminUpdateAccountRequest) error
+	AdminUpdatePassword(authorID uint, req request.AdminUpdatePasswordRequest) error
 }

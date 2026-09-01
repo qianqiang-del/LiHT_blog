@@ -165,6 +165,7 @@ func (s *service) GetArticleDetail(id uint, userID *uint) (*dto.ArticleDetail, e
 	return &dto.ArticleDetail{
 		ID:           article.ID,
 		Title:        article.Title,
+		Summary:      article.Summary,
 		Content:      article.Content,
 		Cover:        article.Cover,
 		Category:     categoryDTO,
@@ -320,6 +321,69 @@ func (s *service) AdminCreateArticle(req request.AdminCreateArticleRequest) erro
 
 	if err := s.repo.Create(article, req.TagIDs); err != nil {
 		return errors.New(errors.CodeInternalError, "发布文章失败")
+	}
+
+	return nil
+}
+
+// AdminUpdateArticle 后台更新文章
+func (s *service) AdminUpdateArticle(id uint, req request.AdminUpdateArticleRequest) error {
+	// 检查文章是否存在
+	existing, err := s.repo.GetArticleByID(id)
+	if err != nil {
+		return errors.New(errors.CodeResourceNotFound, "文章不存在")
+	}
+
+	// 构建更新对象，只更新传入的字段
+	article := &entity.Article{}
+	article.ID = id
+
+	if req.Title != nil {
+		article.Title = *req.Title
+	} else {
+		article.Title = existing.Title
+	}
+
+	if req.Summary != nil {
+		article.Summary = *req.Summary
+	} else {
+		article.Summary = existing.Summary
+	}
+
+	if req.Content != nil {
+		article.Content = *req.Content
+	} else {
+		article.Content = existing.Content
+	}
+
+	if req.Cover != nil {
+		article.Cover = *req.Cover
+	} else {
+		article.Cover = existing.Cover
+	}
+
+	if req.CategoryID != nil {
+		article.CategoryID = *req.CategoryID
+	} else {
+		article.CategoryID = existing.CategoryID
+	}
+
+	// 标签：如果传了就用新的，否则用旧的
+	tagIDs := req.TagIDs
+	if tagIDs == nil {
+		// 获取旧标签
+		oldTags, err := s.repo.GetArticleTags(id)
+		if err != nil {
+			return errors.New(errors.CodeInternalError, "获取文章标签失败")
+		}
+		tagIDs = make([]uint, 0, len(oldTags))
+		for _, t := range oldTags {
+			tagIDs = append(tagIDs, t.ID)
+		}
+	}
+
+	if err := s.repo.Update(article, tagIDs); err != nil {
+		return errors.New(errors.CodeInternalError, "更新文章失败")
 	}
 
 	return nil
