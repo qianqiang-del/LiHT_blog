@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"blog/internal/repository"
@@ -54,12 +55,19 @@ func (c *Consumer) Start() {
 		close(c.done)
 		return
 	}
-	_ = c.redisRepo.XGroupCreate(c.ctx, StreamKey, ConsumerGroup, "0")
+	if err := c.ensureGroup(); err != nil {
+		logger.Warn("Stream Consumer: 创建消费者组失败，消费循环中将自动重试", zap.Error(err))
+	}
 	go c.consume()
 	logger.Info("Stream Consumer 已启动",
 		zap.String("stream", StreamKey),
 		zap.String("group", ConsumerGroup),
 	)
+}
+
+// ensureGroup 确保 Consumer Group 存在（MKSTREAM: Stream 不存在时自动创建）
+func (c *Consumer) ensureGroup() error {
+	return c.redisRepo.XGroupCreate(c.ctx, StreamKey, ConsumerGroup, "0")
 }
 
 // Stop 优雅停止消费者
@@ -109,10 +117,19 @@ func (c *Consumer) pullAndMerge(counts map[uint]int64, msgIDs *[]string) {
 		[]string{StreamKey, ">"}, int64(BatchMax), FlushInterval,
 	)
 	if err != nil {
-		if !errors.Is(err, redis.Nil) && c.ctx.Err() == nil {
-			logger.Warn("Stream Consumer: XReadGroup 失败", zap.Error(err))
-			time.Sleep(time.Second)
+		if errors.Is(err, redis.Nil) || c.ctx.Err() != nil {
+			return
 		}
+		// NOGROUP: Consumer Group 不存在（Redis 重启后丢失），自动重建
+		if isNoGroupErr(err) {
+			logger.Warn("Stream Consumer: Consumer Group 不存在，正在重建...")
+			if createErr := c.ensureGroup(); createErr != nil {
+				logger.Warn("Stream Consumer: 重建 Consumer Group 失败", zap.Error(createErr))
+			}
+			return
+		}
+		logger.Warn("Stream Consumer: XReadGroup 失败", zap.Error(err))
+		time.Sleep(time.Second)
 		return
 	}
 
@@ -127,6 +144,11 @@ func (c *Consumer) pullAndMerge(counts map[uint]int64, msgIDs *[]string) {
 			*msgIDs = append(*msgIDs, m.ID)
 		}
 	}
+}
+
+// isNoGroupErr 判断错误是否为 NOGROUP（Consumer Group 不存在）
+func isNoGroupErr(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "NOGROUP")
 }
 
 // flush 批量写入 MySQL

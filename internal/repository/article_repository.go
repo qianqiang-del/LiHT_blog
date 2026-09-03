@@ -141,6 +141,12 @@ func (r *articleRepository) GetArticleTags(articleID uint) ([]entity.Tag, error)
 	return tags, err
 }
 
+// IncrementViewCount 浏览量 +1（降级时直接写 MySQL）
+func (r *articleRepository) IncrementViewCount(articleID uint) error {
+	return r.db.Model(&entity.Article{}).Where("id = ?", articleID).
+		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
+}
+
 // HasLiked 查询用户是否已点赞某文章
 func (r *articleRepository) HasLiked(db *gorm.DB, articleID, userID uint) (bool, error) {
 	var count int64

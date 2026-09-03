@@ -139,10 +139,13 @@ func (s *service) GetArticleDetail(id uint, userID *uint) (*dto.ArticleDetail, e
 		return nil, errors.New(errors.CodeInternalError, "查询文章标签失败")
 	}
 
-	// 浏览量 +1：发到 Redis Stream，由消费者异步写入 MySQL
-	_ = s.redisRepo.XAdd(context.Background(), stream.StreamKey, map[string]interface{}{
+	// 浏览量 +1：优先发到 Redis Stream 异步写入，Redis 不可用时降级直接写 MySQL
+	if err := s.redisRepo.XAdd(context.Background(), stream.StreamKey, map[string]interface{}{
 		"id": fmt.Sprintf("%d", id),
-	})
+	}); err != nil {
+		// Redis 不可用，降级直接写 MySQL
+		_ = s.repo.IncrementViewCount(id)
+	}
 
 	// 查询点赞状态
 	liked := false
